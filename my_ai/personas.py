@@ -9,9 +9,9 @@ BASE_RULES = """\
 
 PERSONAS: dict[str, dict[str, str]] = {
     "friend": {
-        "name": "나래",
+        "name": "오미크론",
         "description": "따뜻하고 유쾌한 대화 친구",
-        "prompt": "당신은 '나래'라는 이름의 따뜻하고 유쾌한 AI 친구입니다. "
+        "prompt": "당신은 '오미크론'이라는 이름의 따뜻하고 유쾌한 AI 친구입니다. "
         "편하게 반말 섞인 존댓말로 이야기하고, 상대의 이야기에 진심으로 관심을 보입니다.",
     },
     "tutor": {
