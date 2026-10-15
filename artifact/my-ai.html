@@ -74,6 +74,11 @@
   .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 14px; text-align: left; }
   .chip:hover { border-color: var(--accent); }
 
+  .dl { display: flex; gap: 14px; align-items: center; justify-content: space-between; flex-wrap: wrap; background: var(--accent-soft); border: 1px solid var(--accent); border-radius: 12px; padding: 14px 16px; margin-top: 10px; }
+  .dl b { display: block; font-weight: 500; }
+  .dl span { display: block; font-size: 13px; color: var(--muted); }
+  .dl a { color: var(--accent); font-weight: 500; overflow-wrap: anywhere; }
+  .dl > div { min-width: 0; flex: 1 1 260px; }
   .keybox { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
   .keybox h2 { font-size: 16px; margin: 0; }
   .keybox p { margin: 0; font-size: 13.5px; color: var(--muted); }
@@ -155,6 +160,7 @@ const PERSONAS = {
 const MODEL = "claude-opus-5-5";
 const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.129.0/+esm";
 const KEY_STORE = "my-ai-api-key";
+const GITHUB_URL = "https://github.com/advanceozeta-debug/ai/blob/ccr-94219d03-4xwo5o/artifact/my-ai.html";
 
 const $ = (id) => document.getElementById(id);
 // mode: "loading" | "claude"(claude.ai 안) | "api"(크롬 파일 + API 키) | "off"
@@ -300,6 +306,18 @@ function renderWelcome() {
   for (const s of p.starters) {
     const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = s;
     b.onclick = () => send(s); chips.append(b);
+  }
+  if (state.mode === "claude") {
+    const dl = document.createElement("div"); dl.className = "dl";
+    dl.innerHTML = `<div><b>크롬에서 웹 검색까지 쓰기</b><span>파일을 받아 크롬으로 열고, Anthropic API 키를 넣으면 웹 검색이 켜져요.</span></div>`;
+    if (downloads) {
+      const btn = document.createElement("button"); btn.type = "button"; btn.className = "send"; btn.textContent = "파일 받기";
+      btn.onclick = saveFile; dl.append(btn);
+    }
+    const alt = document.createElement("span");
+    alt.innerHTML = `${downloads ? "안 받아지면" : "여기서 받기:"} <a href="${GITHUB_URL}" target="_blank" rel="noopener">GitHub에서 받기</a> (페이지 오른쪽 위 ⤓ 버튼)`;
+    dl.querySelector("div").append(alt);
+    col.querySelector(".welcome").append(dl);
   }
 }
 function renderKeyBox() {
@@ -507,10 +525,14 @@ document.querySelectorAll(".persona").forEach((b) => (b.onclick = () => setPerso
 $("personaSelect").onchange = (e) => setPersona(e.target.value);
 $("reset").onclick = $("resetMobile").onclick = () => setPersona(state.persona);
 $("changeKey").onclick = $("changeKeyMobile").onclick = () => { if (state.busy) return; store.set(KEY_STORE, null); client = null; setBusy(false); renderKeyBox(); };
-$("saveFile").onclick = $("saveFileMobile").onclick = async () => {
-  try { await downloads.save({ filename: "나만의-AI-비서.html", data: new Blob([PRISTINE], { type: "text/html" }) }); }
-  catch (e) { if (e?.code !== "declined") showBanner("이 화면에서는 파일 저장이 안 돼요. GitHub 저장소의 artifact/my-ai.html 을 받아 크롬으로 열어주세요."); }
-};
+async function saveFile() {
+  if (!downloads) { showBanner("이 화면에서는 파일 저장이 안 돼요. 첫 화면의 GitHub 링크에서 받아주세요."); return; }
+  try {
+    const r = await downloads.save({ filename: "나만의-AI-비서.html", data: new Blob([PRISTINE], { type: "text/html" }) });
+    if (r !== false) showBanner("");
+  } catch (e) { if (e?.code !== "declined") showBanner("이 화면에서는 파일 저장이 안 돼요. 첫 화면의 GitHub 링크에서 받아주세요."); }
+}
+$("saveFile").onclick = $("saveFileMobile").onclick = saveFile;
 $("form").addEventListener("submit", (e) => {
   e.preventDefault();
   if (state.busy) { state.ctl?.abort(); state.stream?.abort(); return; }
