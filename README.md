@@ -25,6 +25,16 @@ python -m my_ai --no-web                 # 웹 검색 끄기
 
 대화 중 명령어: `/persona <이름>`, `/memory`, `/reset`, `/help`, `/quit`
 
+### 🌐 웹 화면으로 쓰기
+
+```bash
+python -m my_ai.web              # 브라우저에서 http://127.0.0.1:8000 열기
+python -m my_ai.web --port 9000  # 포트 바꾸기
+```
+
+왼쪽에서 성격을 고르고, AI가 기억하는 내용을 확인할 수 있어요. 휴대폰 화면과 다크 모드도 지원합니다.
+기본으로 내 컴퓨터(127.0.0.1)에서만 열립니다. 다른 사람에게 공개하면 내 API 키로 요금이 나가니 주의하세요.
+
 ## 직접 고쳐보기
 
 - **새 성격 추가** → `my_ai/personas.py`의 `PERSONAS`에 항목 하나 추가
@@ -40,6 +50,8 @@ my_ai/
   tools.py     도구 정의와 실행
   memory.py    장기 기억 저장
   cli.py       터미널 대화 화면
+  web.py       웹 서버 (FastAPI, 답변을 실시간 스트리밍)
+  static/      웹 화면 (index.html 한 파일)
 tests/         API 키 없이 돌아가는 테스트 (python -m pytest)
 ```
 

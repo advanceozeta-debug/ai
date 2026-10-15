@@ -8,10 +8,14 @@ class Memory:
     def __init__(self, path: Path):
         self.path = path
         self.facts: list[str] = []
-        if path.exists():
-            self.facts = json.loads(path.read_text(encoding="utf-8"))
+        self._load()
+
+    def _load(self) -> None:
+        if self.path.exists():
+            self.facts = json.loads(self.path.read_text(encoding="utf-8"))
 
     def add(self, fact: str) -> str:
+        self._load()  # 다른 창(세션)이 그사이 저장한 내용을 덮어쓰지 않도록
         fact = fact.strip()
         if not fact:
             return "저장할 내용이 비어 있습니다."
@@ -22,6 +26,7 @@ class Memory:
         return f"기억했습니다: {fact}"
 
     def forget(self, keyword: str) -> str:
+        self._load()
         before = len(self.facts)
         self.facts = [f for f in self.facts if keyword not in f]
         removed = before - len(self.facts)

@@ -3,9 +3,7 @@
 import argparse
 from pathlib import Path
 
-import anthropic
-
-from .agent import Agent
+from .agent import Agent, friendly_error
 from .personas import DEFAULT_PERSONA, PERSONAS
 
 HELP = """명령어:
@@ -65,18 +63,11 @@ def main() -> None:
         print(f"{PERSONAS[persona]['name']} > ", end="", flush=True)
         try:
             agent.ask(user, on_tool=lambda name, a: print(f"\n  [도구 사용: {name} {a}]", flush=True))
-        except anthropic.AuthenticationError:
-            print("\nAPI 키가 올바르지 않아요. ANTHROPIC_API_KEY 를 확인해 주세요.")
-        except TypeError as e:
-            if "authentication" not in str(e):
+        except Exception as e:
+            message = friendly_error(e)
+            if message is None:
                 raise
-            print("\nAPI 키가 없어요. export ANTHROPIC_API_KEY=... 로 설정한 뒤 다시 실행해 주세요.")
-        except anthropic.RateLimitError:
-            print("\n요청이 너무 많아요. 잠시 후 다시 시도해 주세요.")
-        except anthropic.APIStatusError as e:
-            print(f"\nAPI 오류 ({e.status_code}): {e.message}")
-        except anthropic.APIConnectionError:
-            print("\n네트워크 연결을 확인해 주세요.")
+            print(f"\n{message}")
         print("\n")
 
 

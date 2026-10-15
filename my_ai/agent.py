@@ -13,6 +13,21 @@ MODEL = "claude-opus-5-5"
 MAX_STEPS = 20  # 한 질문에 도구를 연달아 쓸 수 있는 최대 횟수
 
 
+def friendly_error(e: Exception) -> str | None:
+    """API 오류를 사용자용 한국어 문구로 바꿉니다. 모르는 오류면 None."""
+    if isinstance(e, anthropic.AuthenticationError):
+        return "API 키가 올바르지 않아요. ANTHROPIC_API_KEY 를 확인해 주세요."
+    if isinstance(e, TypeError) and "authentication" in str(e):
+        return "API 키가 없어요. export ANTHROPIC_API_KEY=... 로 설정한 뒤 다시 실행해 주세요."
+    if isinstance(e, anthropic.RateLimitError):
+        return "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
+    if isinstance(e, anthropic.APIStatusError):
+        return f"API 오류 ({e.status_code}): {e.message}"
+    if isinstance(e, anthropic.APIConnectionError):
+        return "네트워크 연결을 확인해 주세요."
+    return None
+
+
 class Agent:
     def __init__(
         self,
