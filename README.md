@@ -35,6 +35,11 @@ python -m my_ai.web --port 9000  # 포트 바꾸기
 왼쪽에서 성격을 고르고, AI가 기억하는 내용을 확인할 수 있어요. 휴대폰 화면과 다크 모드도 지원합니다.
 기본으로 내 컴퓨터(127.0.0.1)에서만 열립니다. 다른 사람에게 공개하면 내 API 키로 요금이 나가니 주의하세요.
 
+### 🔗 바로 써보기 (설치 없이)
+
+https://claude.ai/artifact/32zMFeLrj7XvkSQv1WqUTd — claude.ai에 올린 버전입니다. API 키 없이 내 Claude 계정으로 대화하고,
+기억은 사람마다 따로 비공개로 저장됩니다. 소스는 `artifact/index.html` (웹 검색·파일 읽기 도구는 빠져 있어요).
+
 ## 직접 고쳐보기
 
 - **새 성격 추가** → `my_ai/personas.py`의 `PERSONAS`에 항목 하나 추가

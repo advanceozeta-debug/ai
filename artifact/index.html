@@ -1,0 +1,351 @@
+<title>나만의 AI 비서</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+  /* Layout: a narrow rail of personas and memory beside one reading column of conversation; rail folds into a top bar on phones. */
+  :root {
+    --bg: #f3f5f4; --panel: #ffffff; --fg: #18211f; --muted: #5f6b68; --line: #dce2e0;
+    --accent: #1d6b62; --accent-ink: #ffffff; --accent-soft: #e2efec; --user: #e6ebe9; --code: #eef2f1; --danger: #b3261e;
+    --font-body: "IBM Plex Sans KR", "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+    --font-mono: "IBM Plex Mono", ui-monospace, Menlo, Consolas, monospace;
+  }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) {
+    --bg: #121716; --panel: #1a2120; --fg: #e5ebe9; --muted: #96a3a0; --line: #2b3533;
+    --accent: #5bbfb0; --accent-ink: #0d1413; --accent-soft: #1f3330; --user: #243030; --code: #0f1413; --danger: #f2a49d; color-scheme: dark; } }
+  :root[data-theme="dark"] {
+    --bg: #121716; --panel: #1a2120; --fg: #e5ebe9; --muted: #96a3a0; --line: #2b3533;
+    --accent: #5bbfb0; --accent-ink: #0d1413; --accent-soft: #1f3330; --user: #243030; --code: #0f1413; --danger: #f2a49d; color-scheme: dark; }
+  html, body { height: 100%; }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.65 var(--font-body); display: flex; overflow: hidden; }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  .rail { width: 272px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 22px 18px; padding-left: max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+  .brand { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
+  .brand small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
+  .personas { display: grid; gap: 6px; }
+  .persona { text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 9px 11px; }
+  .persona:hover { background: var(--accent-soft); }
+  .persona b { display: block; font-weight: 500; }
+  .persona span { display: block; font-size: 12.5px; color: var(--muted); }
+  .persona[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  .memory { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 13px; }
+  .memory li { display: flex; gap: 6px; align-items: flex-start; }
+  .memory li::before { content: "·"; color: var(--accent); font-weight: 700; }
+  .memory .none { color: var(--muted); }
+  .memory .none::before { content: none; }
+  .note { font-size: 12px; color: var(--muted); }
+  .ghost { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
+  .ghost:hover { border-color: var(--accent); color: var(--fg); }
+
+  main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
+  .topbar { display: none; }
+  #log { flex: 1; overflow-y: auto; padding-block: 28px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .col { max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+  .msg { min-width: 0; overflow-wrap: anywhere; }
+  .msg.user { align-self: flex-end; background: var(--user); border-radius: 14px 14px 4px 14px; padding: 9px 14px; max-width: 85%; white-space: pre-wrap; }
+  .who { font-size: 12px; font-weight: 500; color: var(--accent); margin-bottom: 4px; }
+  .body p { margin: 0 0 10px; }
+  .body p:last-child { margin-bottom: 0; }
+  .body ul { margin: 0 0 10px; padding-left: 20px; }
+  .body pre { background: var(--code); border: 1px solid var(--line); border-radius: 8px; padding: 12px; overflow-x: auto; font: 13px/1.55 var(--font-mono); margin: 0 0 10px; }
+  .body code { font-family: var(--font-mono); font-size: 0.88em; background: var(--code); padding: 1px 5px; border-radius: 4px; }
+  .body pre code { background: none; padding: 0; }
+  .tool { display: inline-flex; gap: 6px; font: 12px var(--font-mono); color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; padding: 2px 8px; margin: 0 6px 8px 0; }
+  .thinking { color: var(--muted); font-size: 14px; }
+  .thinking::after { content: ""; display: inline-block; width: 1.2em; text-align: left; animation: dots 1.2s steps(4) infinite; }
+  @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
+  .err { color: var(--danger); font-size: 14px; margin-top: 6px; }
+
+  .welcome { padding-top: 6vh; display: grid; gap: 14px; }
+  .welcome h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.02em; margin: 0; text-wrap: balance; }
+  .welcome p { margin: 0; color: var(--muted); max-width: 60ch; }
+  .chips { display: flex; flex-wrap: wrap; gap: 8px; }
+  .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 14px; text-align: left; }
+  .chip:hover { border-color: var(--accent); }
+
+  form { padding-block: 10px 18px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .composer { max-width: 720px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
+  .composer:focus-within { border-color: var(--accent); }
+  textarea { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; resize: none; padding: 6px 8px; max-height: 180px; outline: none; }
+  .send { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 8px 16px; font-weight: 500; }
+  .send:disabled { opacity: 0.45; cursor: default; }
+  .unavailable { max-width: 720px; margin: 0 auto 8px; font-size: 13px; color: var(--danger); }
+
+  @media (max-width: 760px) {
+    .rail { display: none; }
+    .topbar { display: flex; gap: 8px; align-items: center; background: var(--panel); border-bottom: 1px solid var(--line); padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+    .topbar select { flex: 1; min-width: 0; font: inherit; padding: 6px 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+    .welcome h1 { font-size: 22px; }
+  }
+  @media (prefers-reduced-motion: reduce) { .thinking::after { animation: none; content: "..."; } }
+</style>
+
+<aside class="rail">
+  <div class="brand">나만의 AI 비서<small>성격 · 기억 · 도구를 가진 Claude</small></div>
+  <section>
+    <div class="label">성격</div>
+    <div class="personas" id="personas"></div>
+  </section>
+  <section>
+    <div class="label">기억하는 내용</div>
+    <ul class="memory" id="memory"><li class="none">아직 없음</li></ul>
+    <p class="note" id="memNote">대화 중에 알려준 내용을 AI가 저장해요. 나만 볼 수 있어요.</p>
+  </section>
+  <button class="ghost" id="reset" type="button">새 대화</button>
+</aside>
+
+<main>
+  <div class="topbar">
+    <select id="personaSelect" aria-label="성격"></select>
+    <button class="ghost" id="resetMobile" type="button">새 대화</button>
+  </div>
+  <div id="log"><div class="col" id="col"></div></div>
+  <form id="form">
+    <div class="unavailable" id="unavailable" hidden></div>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="메시지를 입력하세요" aria-label="메시지"></textarea>
+      <button class="send" id="send" type="submit">보내기</button>
+    </div>
+  </form>
+</main>
+
+<script>
+const PERSONAS = {
+  friend: { name: "나래", desc: "따뜻하고 유쾌한 대화 친구",
+    prompt: "당신은 '나래'라는 이름의 따뜻하고 유쾌한 AI 친구입니다. 편한 존댓말로 이야기하고, 상대의 이야기에 진심으로 관심을 보입니다.",
+    starters: ["오늘 좀 지쳤어", "주말에 뭐 하면 좋을까?", "내 이름은 지우야, 기억해줘"] },
+  tutor: { name: "공부 선생님", desc: "개념을 단계별로 설명하는 공부 도우미",
+    prompt: "당신은 인내심 있는 과외 선생님입니다. 정답을 바로 주기보다 학생이 스스로 생각하도록 질문을 던지고, 개념을 쉬운 예시와 함께 단계별로 설명합니다. 설명 후에는 이해를 확인하는 짧은 문제를 하나 냅니다.",
+    starters: ["광합성을 쉽게 설명해줘", "이차방정식 근의 공식은 왜 그렇게 생겼어?", "1234 × 5678 계산 과정 보여줘"] },
+  coder: { name: "코딩 파트너", desc: "코드 작성·리뷰·디버깅 도우미",
+    prompt: "당신은 숙련된 소프트웨어 엔지니어입니다. 정확하고 실행 가능한 코드를 제시하고, 왜 그렇게 하는지 간결하게 설명합니다. 코드는 마크다운 코드 블록으로 씁니다.",
+    starters: ["파이썬으로 파일 단어 수 세는 코드", "for문과 while문 차이", "자바스크립트 배열 중복 제거"] },
+  support: { name: "고객 상담원", desc: "하늘마켓 고객응대 (예시 쇼핑몰)",
+    prompt: "당신은 예시 온라인 쇼핑몰 '하늘마켓'의 친절한 상담원입니다. 정중한 존댓말을 쓰고, 환불·배송·교환 문의를 차분히 안내합니다. 정책을 모르는 경우 지어내지 말고 담당 부서 연결을 안내합니다. 기본 정책: 수령 후 7일 이내 무료 반품, 배송은 2~3일 소요.",
+    starters: ["어제 주문했는데 언제 와요?", "사이즈가 안 맞아서 교환하고 싶어요", "환불은 얼마나 걸려요?"] },
+};
+const RULES = `공통 규칙:
+- 사용자가 쓰는 언어로 답하세요 (기본: 한국어).
+- 사용자에 대해 오래 기억할 만한 사실(이름, 선호, 목표 등)을 알게 되면 remember 도구로 저장하세요.
+- 계산은 추측하지 말고 calculator 도구를 쓰세요. 날짜·시각이 필요하면 current_time 도구를 쓰세요.
+- 모르는 것은 모른다고 말하세요. 답은 간결하게, 필요할 때만 목록이나 코드 블록을 쓰세요.`;
+
+const $ = (id) => document.getElementById(id);
+const state = { persona: "friend", turns: [], facts: [], busy: false, ctl: null };
+let sample = null, toolsOk = false, memStore = null;
+
+// ---------- 기억: db(로그인 사용자별 비공개) → 없으면 이 브라우저에만 ----------
+const LOCAL_KEY = "my-ai-memory";
+const local = {
+  load() { try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; } catch { return []; } },
+  async save(facts) { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(facts)); } catch {} },
+};
+async function initMemory() {
+  state.facts = local.load();
+  renderMemory();
+  const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
+  const id = user ? await user.id() : null;
+  if (!db || !id) { $("memNote").textContent = "기억은 이 브라우저에만 저장돼요."; return; }
+  const ref = db.collection("data/users/" + id).doc("memory");
+  memStore = { async save(facts) { await ref.set({ facts }); } };
+  try {
+    const snap = await ref.get();
+    const saved = snap.exists ? snap.data().facts : null;
+    if (Array.isArray(saved)) state.facts = saved.map(String);
+    else if (state.facts.length) await memStore.save(state.facts);
+    renderMemory();
+  } catch { memStore = null; $("memNote").textContent = "기억은 이 브라우저에만 저장돼요."; }
+}
+async function saveMemory() {
+  renderMemory();
+  await local.save(state.facts);
+  if (memStore) { try { await memStore.save(state.facts); } catch {} }
+}
+function renderMemory() {
+  const ul = $("memory");
+  ul.replaceChildren();
+  if (!state.facts.length) { const li = document.createElement("li"); li.className = "none"; li.textContent = "아직 없음"; ul.append(li); return; }
+  for (const f of state.facts) { const li = document.createElement("li"); li.textContent = f; ul.append(li); }
+}
+
+// ---------- 도구 ----------
+function safeEval(expr) {
+  const src = String(expr).replace(/\s+/g, "").replace(/\*\*/g, "^");
+  if (!/^[0-9+\-*/%^().,a-z]*$/i.test(src)) throw new Error("숫자와 + - * / % ^ ( ) 그리고 sqrt, sin, cos, tan, log, pi, e 만 쓸 수 있어요");
+  let i = 0;
+  const FN = { sqrt: Math.sqrt, sin: Math.sin, cos: Math.cos, tan: Math.tan, log: Math.log, abs: Math.abs };
+  const peek = () => src[i];
+  function primary() {
+    if (peek() === "(") { i++; const v = expr0(); if (src[i++] !== ")") throw new Error("괄호가 맞지 않아요"); return v; }
+    const m = /^(\d+\.?\d*|\.\d+)/.exec(src.slice(i));
+    if (m) { i += m[0].length; return parseFloat(m[0]); }
+    const w = /^[a-z]+/i.exec(src.slice(i));
+    if (w) {
+      i += w[0].length; const name = w[0].toLowerCase();
+      if (name === "pi") return Math.PI;
+      if (name === "e") return Math.E;
+      if (FN[name] && peek() === "(") return FN[name](primary());
+      throw new Error("모르는 이름: " + name);
+    }
+    throw new Error("식을 읽을 수 없어요");
+  }
+  function unary() { if (peek() === "-") { i++; return -unary(); } if (peek() === "+") { i++; return unary(); } return power(); }
+  function power() { const b = primary(); if (peek() === "^") { i++; const ex = unary(); if (Math.abs(ex) > 1000) throw new Error("지수가 너무 커요"); return b ** ex; } return b; }
+  function term() { let v = unary(); while ("*/%".includes(peek() || "x")) { const op = src[i++]; const r = unary(); v = op === "*" ? v * r : op === "/" ? v / r : v % r; } return v; }
+  function expr0() { let v = term(); while (peek() === "+" || peek() === "-") { const op = src[i++]; const r = term(); v = op === "+" ? v + r : v - r; } return v; }
+  const v = expr0();
+  if (i !== src.length) throw new Error("식을 끝까지 읽지 못했어요");
+  return v;
+}
+
+let showTool = () => {};
+const TOOLS = [
+  { name: "calculator", description: "수식을 정확히 계산해 결과 숫자를 돌려줍니다. + - * / % ** 와 sqrt, sin, cos, tan, log, pi, e 지원.",
+    inputSchema: { type: "object", properties: { expression: { type: "string", description: "예: (3+4)*2**3" } }, required: ["expression"] },
+    execute: ({ expression }) => { showTool("calculator", expression); return String(safeEval(expression)); } },
+  { name: "current_time", description: "사용자 기기 기준 현재 날짜·시각·요일을 돌려줍니다.",
+    execute: () => { showTool("current_time", ""); return new Date().toLocaleString("ko-KR", { dateStyle: "full", timeStyle: "short" }); } },
+  { name: "remember", description: "사용자에 대해 다음 대화에서도 기억할 사실 하나를 저장합니다. 저장 결과를 돌려줍니다.",
+    inputSchema: { type: "object", properties: { fact: { type: "string" } }, required: ["fact"] },
+    execute: async ({ fact }) => {
+      const f = String(fact || "").trim(); showTool("remember", f);
+      if (!f) throw new Error("빈 내용");
+      if (state.facts.includes(f)) return "이미 기억하고 있어요";
+      state.facts.push(f); await saveMemory(); return "기억했습니다: " + f;
+    } },
+  { name: "forget", description: "키워드가 들어간 기억을 지웁니다. 사용자가 잊어달라고 할 때만 씁니다. 지운 개수를 돌려줍니다.",
+    inputSchema: { type: "object", properties: { keyword: { type: "string" } }, required: ["keyword"] },
+    execute: async ({ keyword }) => {
+      const k = String(keyword || ""); showTool("forget", k);
+      if (!k) throw new Error("빈 키워드");
+      const before = state.facts.length; state.facts = state.facts.filter((f) => !f.includes(k));
+      await saveMemory(); return `${before - state.facts.length}개를 지웠어요`;
+    } },
+];
+
+// ---------- 화면 ----------
+const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function md(src) {
+  const parts = src.split(/```[\w-]*\n?([\s\S]*?)(?:```|$)/g);
+  let html = "";
+  parts.forEach((part, idx) => {
+    if (idx % 2) { html += "<pre><code>" + esc(part.replace(/\n$/, "")) + "</code></pre>"; return; }
+    for (const block of esc(part).split(/\n{2,}/)) {
+      if (!block.trim()) continue;
+      const inline = (t) => t.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      const lines = block.split("\n");
+      if (lines.every((l) => /^\s*([-*]|\d+\.)\s/.test(l))) html += "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^\s*([-*]|\d+\.)\s/, "")) + "</li>").join("") + "</ul>";
+      else html += "<p>" + inline(block).replace(/\n/g, "<br>") + "</p>";
+    }
+  });
+  return html;
+}
+const scrollDown = () => { $("log").scrollTop = $("log").scrollHeight; };
+
+function renderWelcome() {
+  const p = PERSONAS[state.persona];
+  const col = $("col");
+  col.innerHTML = `<div class="welcome"><h1>${esc(p.name)}에게 말을 걸어보세요</h1><p>${esc(p.desc)}. 계산, 시각 확인, 기억하기 도구를 스스로 써요.</p><div class="chips"></div></div>`;
+  const chips = col.querySelector(".chips");
+  for (const s of p.starters) {
+    const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = s;
+    b.onclick = () => send(s); chips.append(b);
+  }
+}
+function setPersona(key) {
+  if (state.busy) return;
+  state.persona = key; state.turns = [];
+  document.querySelectorAll(".persona").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.key === key)));
+  $("personaSelect").value = key;
+  try { localStorage.setItem("my-ai-persona", key); } catch {}
+  renderWelcome();
+}
+function setBusy(b) {
+  state.busy = b;
+  $("send").textContent = b ? "멈추기" : "보내기";
+  $("send").disabled = !b && !sample;
+}
+function addMsg(cls, html) {
+  $("col").querySelector(".welcome")?.remove();
+  const el = document.createElement("div"); el.className = "msg " + cls; el.innerHTML = html;
+  $("col").append(el); scrollDown(); return el;
+}
+
+const ERRORS = {
+  not_granted: "Claude 사용이 허용되지 않았어요. 페이지를 새로고침하면 다시 물어봐요.",
+  sampling_disabled: "이 계정에서는 Claude를 쓸 수 없어요.",
+  rate_limited: "지금은 요청이 많아요. 잠시 뒤 다시 보내주세요.",
+  session_expired: "로그인이 만료됐어요. 다시 로그인해 주세요.",
+  refused: "이 요청에는 답할 수 없어요. 다르게 물어봐 주세요.",
+  prompt_too_large: "대화가 너무 길어졌어요. '새 대화'를 눌러 주세요.",
+  empty_completion: "답이 비어 있어요. 질문을 조금 바꿔 보세요.",
+};
+const HIDE = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
+
+async function send(text) {
+  if (state.busy || !sample || !text.trim()) return;
+  const p = PERSONAS[state.persona];
+  addMsg("user", esc(text));
+  const bot = addMsg("bot", `<div class="who">${esc(p.name)}</div><div class="tools"></div><div class="body"><span class="thinking">생각하는 중</span></div>`);
+  const body = bot.querySelector(".body"), toolsEl = bot.querySelector(".tools");
+  showTool = (name, arg) => {
+    const t = document.createElement("span"); t.className = "tool"; t.textContent = `${name}${arg ? " · " + arg : ""}`;
+    toolsEl.append(t); scrollDown();
+  };
+  state.turns.push({ role: "user", content: text });
+  const instructions = `${p.prompt}\n\n${RULES}\n\n지금까지 사용자에 대해 기억하는 내용:\n${state.facts.length ? state.facts.map((f) => "- " + f).join("\n") : "(없음)"}`;
+  const input = [{ role: "user", content: instructions }, ...state.turns.slice(-30)];
+  state.ctl = new AbortController(); setBusy(true);
+  try {
+    const opts = { signal: state.ctl.signal, cache: false, onText: ({ text: t }) => { body.innerHTML = md(t); scrollDown(); } };
+    if (toolsOk) { delete opts.cache; opts.tools = TOOLS; }
+    const res = await sample(input, opts);
+    state.turns.push({ role: "assistant", content: res.text });
+    body.innerHTML = md(res.text);
+    if (res.truncated) body.insertAdjacentHTML("beforeend", `<div class="err">답이 길어서 중간에 끊겼어요.</div>`);
+  } catch (e) {
+    const kept = e && e.code !== "refused" ? e.text : "";
+    body.innerHTML = kept ? md(kept) : "";
+    if (kept) state.turns.push({ role: "assistant", content: kept });
+    if (e?.code !== "cancelled") body.insertAdjacentHTML("beforeend", `<div class="err">${esc(ERRORS[e?.code] || "연결이 끊겼어요. 다시 보내주세요.")}</div>`);
+    if (HIDE.includes(e?.code)) disable(ERRORS[e.code] || "이 화면에서는 Claude를 쓸 수 없어요.");
+  } finally {
+    setBusy(false); state.ctl = null; $("input").focus();
+  }
+}
+function disable(msg) { sample = null; $("unavailable").textContent = msg; $("unavailable").hidden = false; $("send").disabled = true; }
+
+// ---------- 시작 ----------
+$("personas").innerHTML = Object.entries(PERSONAS).map(([k, p]) =>
+  `<button type="button" class="persona" data-key="${k}" aria-pressed="false"><b>${esc(p.name)}</b><span>${esc(p.desc)}</span></button>`).join("");
+$("personaSelect").innerHTML = Object.entries(PERSONAS).map(([k, p]) => `<option value="${k}">${esc(p.name)}</option>`).join("");
+document.querySelectorAll(".persona").forEach((b) => (b.onclick = () => setPersona(b.dataset.key)));
+$("personaSelect").onchange = (e) => setPersona(e.target.value);
+$("reset").onclick = $("resetMobile").onclick = () => setPersona(state.persona);
+$("form").addEventListener("submit", (e) => {
+  e.preventDefault();
+  if (state.busy) { state.ctl?.abort(); return; }
+  const t = $("input").value.trim(); if (!t) return;
+  $("input").value = ""; $("input").style.height = "auto"; send(t);
+});
+$("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); } });
+$("input").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; });
+
+let saved = null; try { saved = localStorage.getItem("my-ai-persona"); } catch {}
+setPersona(PERSONAS[saved] ? saved : "friend");
+$("send").disabled = true;
+
+(async () => {
+  if (!window.claude?.use) { disable("Claude 앱이나 claude.ai에서 열어야 대화할 수 있어요."); return; }
+  initMemory();
+  sample = await claude.use("sample");
+  if (!sample) { disable("이 화면에서는 Claude를 쓸 수 없어요. claude.ai에서 열어 주세요."); return; }
+  const limits = await sample.limits().catch(() => null);
+  toolsOk = Boolean(limits?.tools);
+  if (!toolsOk) TOOLS.length = 0;
+  setBusy(false);
+})();
+</script>
