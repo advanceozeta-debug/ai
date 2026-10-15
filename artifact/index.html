@@ -17,13 +17,16 @@
     --bg: #121716; --panel: #1a2120; --fg: #e5ebe9; --muted: #96a3a0; --line: #2b3533;
     --accent: #5bbfb0; --accent-ink: #0d1413; --accent-soft: #1f3330; --user: #243030; --code: #0f1413; --danger: #f2a49d; color-scheme: dark; }
   html, body { height: 100%; }
-  body { background: var(--bg); color: var(--fg); font: 15px/1.65 var(--font-body); display: flex; overflow: hidden; }
+  body { background: var(--bg); color: var(--fg); font: 15px/1.65 var(--font-body); display: flex; overflow: hidden; margin: 0; }
   button { font: inherit; color: inherit; cursor: pointer; }
-  button:focus-visible, textarea:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
-  .rail { width: 272px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 22px 18px; padding-left: max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; }
+  .rail { width: 272px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 22px 18px; padding-left: max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 24px; overflow-y: auto; box-sizing: border-box; }
   .brand { font-weight: 700; font-size: 17px; letter-spacing: -0.01em; }
   .brand small { display: block; font-weight: 400; font-size: 12px; color: var(--muted); }
+  .mode { display: inline-flex; align-items: center; gap: 6px; margin-top: 8px; font-size: 12px; color: var(--muted); border: 1px solid var(--line); border-radius: 999px; padding: 2px 10px; }
+  .mode::before { content: ""; width: 7px; height: 7px; border-radius: 50%; background: var(--line); }
+  .mode.on::before { background: var(--accent); }
   .label { font-size: 11px; font-weight: 500; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 8px; }
   .personas { display: grid; gap: 6px; }
   .persona { text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 9px 11px; }
@@ -36,9 +39,10 @@
   .memory li::before { content: "·"; color: var(--accent); font-weight: 700; }
   .memory .none { color: var(--muted); }
   .memory .none::before { content: none; }
-  .note { font-size: 12px; color: var(--muted); }
+  .note { font-size: 12px; color: var(--muted); margin: 6px 0 0; }
   .ghost { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 6px 12px; font-size: 13px; color: var(--muted); }
   .ghost:hover { border-color: var(--accent); color: var(--fg); }
+  .stack { display: grid; gap: 8px; }
 
   main { flex: 1; min-width: 0; display: flex; flex-direction: column; }
   .topbar { display: none; }
@@ -54,6 +58,9 @@
   .body code { font-family: var(--font-mono); font-size: 0.88em; background: var(--code); padding: 1px 5px; border-radius: 4px; }
   .body pre code { background: none; padding: 0; }
   .tool { display: inline-flex; gap: 6px; font: 12px var(--font-mono); color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; padding: 2px 8px; margin: 0 6px 8px 0; }
+  .sources { margin-top: 10px; font-size: 12.5px; color: var(--muted); display: flex; flex-wrap: wrap; gap: 6px 12px; }
+  .sources a { color: var(--accent); text-decoration: none; max-width: 32ch; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .sources a:hover { text-decoration: underline; }
   .thinking { color: var(--muted); font-size: 14px; }
   .thinking::after { content: ""; display: inline-block; width: 1.2em; text-align: left; animation: dots 1.2s steps(4) infinite; }
   @keyframes dots { 0% { content: ""; } 25% { content: "."; } 50% { content: ".."; } 75% { content: "..."; } }
@@ -66,13 +73,20 @@
   .chip { background: var(--panel); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 14px; text-align: left; }
   .chip:hover { border-color: var(--accent); }
 
-  form { padding-block: 10px 18px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
-  .composer { max-width: 720px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px; }
+  .keybox { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 16px; display: grid; gap: 10px; }
+  .keybox h2 { font-size: 16px; margin: 0; }
+  .keybox p { margin: 0; font-size: 13.5px; color: var(--muted); }
+  .keybox a { color: var(--accent); }
+  .keyrow { display: flex; gap: 8px; flex-wrap: wrap; }
+  .keyrow input { flex: 1; min-width: 0; font: 14px var(--font-mono); padding: 8px 10px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
+
+  form { padding-block: 10px 18px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); margin: 0; }
+  .composer { max-width: 720px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 8px; box-sizing: border-box; }
   .composer:focus-within { border-color: var(--accent); }
   textarea { flex: 1; min-width: 0; border: 0; background: transparent; color: var(--fg); font: inherit; resize: none; padding: 6px 8px; max-height: 180px; outline: none; }
   .send { background: var(--accent); color: var(--accent-ink); border: 0; border-radius: 10px; padding: 8px 16px; font-weight: 500; }
   .send:disabled { opacity: 0.45; cursor: default; }
-  .unavailable { max-width: 720px; margin: 0 auto 8px; font-size: 13px; color: var(--danger); }
+  .banner { max-width: 720px; margin: 0 auto 8px; font-size: 13px; color: var(--danger); }
 
   @media (max-width: 760px) {
     .rail { display: none; }
@@ -84,7 +98,7 @@
 </style>
 
 <aside class="rail">
-  <div class="brand">나만의 AI 비서<small>성격 · 기억 · 도구를 가진 Claude</small></div>
+  <div class="brand">나만의 AI 비서<small>성격 · 기억 · 도구를 가진 Claude</small><span class="mode" id="mode">연결 확인 중</span></div>
   <section>
     <div class="label">성격</div>
     <div class="personas" id="personas"></div>
@@ -92,19 +106,25 @@
   <section>
     <div class="label">기억하는 내용</div>
     <ul class="memory" id="memory"><li class="none">아직 없음</li></ul>
-    <p class="note" id="memNote">대화 중에 알려준 내용을 AI가 저장해요. 나만 볼 수 있어요.</p>
+    <p class="note" id="memNote">대화 중에 알려준 내용을 AI가 저장해요.</p>
   </section>
-  <button class="ghost" id="reset" type="button">새 대화</button>
+  <div class="stack">
+    <button class="ghost" id="reset" type="button">새 대화</button>
+    <button class="ghost" id="saveFile" type="button" hidden>크롬용 파일로 저장 (웹 검색)</button>
+    <button class="ghost" id="changeKey" type="button" hidden>API 키 바꾸기</button>
+  </div>
 </aside>
 
 <main>
   <div class="topbar">
     <select id="personaSelect" aria-label="성격"></select>
     <button class="ghost" id="resetMobile" type="button">새 대화</button>
+    <button class="ghost" id="saveFileMobile" type="button" hidden>파일 저장</button>
+    <button class="ghost" id="changeKeyMobile" type="button" hidden>키</button>
   </div>
   <div id="log"><div class="col" id="col"></div></div>
   <form id="form">
-    <div class="unavailable" id="unavailable" hidden></div>
+    <div class="banner" id="banner" hidden></div>
     <div class="composer">
       <textarea id="input" rows="1" placeholder="메시지를 입력하세요" aria-label="메시지"></textarea>
       <button class="send" id="send" type="submit">보내기</button>
@@ -113,55 +133,74 @@
 </main>
 
 <script>
+// 저장 버튼용: 스크립트가 화면을 바꾸기 전의 원본 문서
+const PRISTINE = "<!doctype html>\n" + document.documentElement.outerHTML;
+
 const PERSONAS = {
   friend: { name: "나래", desc: "따뜻하고 유쾌한 대화 친구",
     prompt: "당신은 '나래'라는 이름의 따뜻하고 유쾌한 AI 친구입니다. 편한 존댓말로 이야기하고, 상대의 이야기에 진심으로 관심을 보입니다.",
-    starters: ["오늘 좀 지쳤어", "주말에 뭐 하면 좋을까?", "내 이름은 지우야, 기억해줘"] },
+    starters: ["오늘 좀 지쳤어", "요즘 화제인 뉴스 알려줘", "내 이름은 지우야, 기억해줘"] },
   tutor: { name: "공부 선생님", desc: "개념을 단계별로 설명하는 공부 도우미",
     prompt: "당신은 인내심 있는 과외 선생님입니다. 정답을 바로 주기보다 학생이 스스로 생각하도록 질문을 던지고, 개념을 쉬운 예시와 함께 단계별로 설명합니다. 설명 후에는 이해를 확인하는 짧은 문제를 하나 냅니다.",
     starters: ["광합성을 쉽게 설명해줘", "이차방정식 근의 공식은 왜 그렇게 생겼어?", "1234 × 5678 계산 과정 보여줘"] },
   coder: { name: "코딩 파트너", desc: "코드 작성·리뷰·디버깅 도우미",
     prompt: "당신은 숙련된 소프트웨어 엔지니어입니다. 정확하고 실행 가능한 코드를 제시하고, 왜 그렇게 하는지 간결하게 설명합니다. 코드는 마크다운 코드 블록으로 씁니다.",
-    starters: ["파이썬으로 파일 단어 수 세는 코드", "for문과 while문 차이", "자바스크립트 배열 중복 제거"] },
+    starters: ["파이썬으로 파일 단어 수 세는 코드", "for문과 while문 차이", "React 최신 버전에서 바뀐 점"] },
   support: { name: "고객 상담원", desc: "하늘마켓 고객응대 (예시 쇼핑몰)",
     prompt: "당신은 예시 온라인 쇼핑몰 '하늘마켓'의 친절한 상담원입니다. 정중한 존댓말을 쓰고, 환불·배송·교환 문의를 차분히 안내합니다. 정책을 모르는 경우 지어내지 말고 담당 부서 연결을 안내합니다. 기본 정책: 수령 후 7일 이내 무료 반품, 배송은 2~3일 소요.",
     starters: ["어제 주문했는데 언제 와요?", "사이즈가 안 맞아서 교환하고 싶어요", "환불은 얼마나 걸려요?"] },
 };
-const RULES = `공통 규칙:
+
+const MODEL = "claude-opus-5-5";
+const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.129.0/+esm";
+const KEY_STORE = "my-ai-api-key";
+
+const $ = (id) => document.getElementById(id);
+// mode: "loading" | "claude"(claude.ai 안) | "api"(크롬 파일 + API 키) | "off"
+const state = { mode: "loading", persona: "friend", turns: [], api: [], facts: [], busy: false, ctl: null, stream: null };
+let sample = null, toolsOk = false, memStore = null, downloads = null, Anthropic = null, client = null;
+
+const store = {
+  get(k) { try { return localStorage.getItem(k); } catch { return null; } },
+  set(k, v) { try { v == null ? localStorage.removeItem(k) : localStorage.setItem(k, v); } catch {} },
+};
+
+function rules() {
+  return `공통 규칙:
 - 사용자가 쓰는 언어로 답하세요 (기본: 한국어).
 - 사용자에 대해 오래 기억할 만한 사실(이름, 선호, 목표 등)을 알게 되면 remember 도구로 저장하세요.
 - 계산은 추측하지 말고 calculator 도구를 쓰세요. 날짜·시각이 필요하면 current_time 도구를 쓰세요.
+${state.mode === "api"
+    ? "- 최신 정보·뉴스·날씨·가격처럼 바뀌는 정보는 web_search로 찾아보고, 어디서 찾았는지 짧게 밝히세요."
+    : "- 지금은 웹 검색을 쓸 수 없어요. 최신 정보가 필요한 질문이면 그렇다고 말하고, 아는 범위에서 답하세요."}
 - 모르는 것은 모른다고 말하세요. 답은 간결하게, 필요할 때만 목록이나 코드 블록을 쓰세요.`;
+}
+function instructions() {
+  const p = PERSONAS[state.persona];
+  return `${p.prompt}\n\n${rules()}\n\n지금까지 사용자에 대해 기억하는 내용:\n${state.facts.length ? state.facts.map((f) => "- " + f).join("\n") : "(없음)"}`;
+}
 
-const $ = (id) => document.getElementById(id);
-const state = { persona: "friend", turns: [], facts: [], busy: false, ctl: null };
-let sample = null, toolsOk = false, memStore = null;
-
-// ---------- 기억: db(로그인 사용자별 비공개) → 없으면 이 브라우저에만 ----------
+// ---------- 기억 ----------
 const LOCAL_KEY = "my-ai-memory";
-const local = {
-  load() { try { return JSON.parse(localStorage.getItem(LOCAL_KEY)) || []; } catch { return []; } },
-  async save(facts) { try { localStorage.setItem(LOCAL_KEY, JSON.stringify(facts)); } catch {} },
-};
-async function initMemory() {
-  state.facts = local.load();
-  renderMemory();
+function loadLocalFacts() { try { return JSON.parse(store.get(LOCAL_KEY)) || []; } catch { return []; } }
+async function initCloudMemory() {
   const [db, user] = await Promise.all([claude.use("db"), claude.use("user")]);
   const id = user ? await user.id() : null;
   if (!db || !id) { $("memNote").textContent = "기억은 이 브라우저에만 저장돼요."; return; }
   const ref = db.collection("data/users/" + id).doc("memory");
-  memStore = { async save(facts) { await ref.set({ facts }); } };
   try {
     const snap = await ref.get();
     const saved = snap.exists ? snap.data().facts : null;
+    memStore = { async save(facts) { await ref.set({ facts }); } };
     if (Array.isArray(saved)) state.facts = saved.map(String);
     else if (state.facts.length) await memStore.save(state.facts);
+    $("memNote").textContent = "대화 중에 알려준 내용을 AI가 저장해요. 나만 볼 수 있어요.";
     renderMemory();
   } catch { memStore = null; $("memNote").textContent = "기억은 이 브라우저에만 저장돼요."; }
 }
 async function saveMemory() {
   renderMemory();
-  await local.save(state.facts);
+  store.set(LOCAL_KEY, JSON.stringify(state.facts));
   if (memStore) { try { await memStore.save(state.facts); } catch {} }
 }
 function renderMemory() {
@@ -171,10 +210,10 @@ function renderMemory() {
   for (const f of state.facts) { const li = document.createElement("li"); li.textContent = f; ul.append(li); }
 }
 
-// ---------- 도구 ----------
+// ---------- 도구 (두 모드 공통) ----------
 function safeEval(expr) {
-  const src = String(expr).replace(/\s+/g, "").replace(/\*\*/g, "^");
-  if (!/^[0-9+\-*/%^().,a-z]*$/i.test(src)) throw new Error("숫자와 + - * / % ^ ( ) 그리고 sqrt, sin, cos, tan, log, pi, e 만 쓸 수 있어요");
+  const src = String(expr).replace(/\s+/g, "").replace(/\*\*/g, "^").replace(/×/g, "*").replace(/÷/g, "/");
+  if (!/^[0-9+\-*/%^().a-z]*$/i.test(src)) throw new Error("숫자와 + - * / % ^ ( ) 그리고 sqrt, sin, cos, tan, log, pi, e 만 쓸 수 있어요");
   let i = 0;
   const FN = { sqrt: Math.sqrt, sin: Math.sin, cos: Math.cos, tan: Math.tan, log: Math.log, abs: Math.abs };
   const peek = () => src[i];
@@ -205,8 +244,9 @@ let showTool = () => {};
 const TOOLS = [
   { name: "calculator", description: "수식을 정확히 계산해 결과 숫자를 돌려줍니다. + - * / % ** 와 sqrt, sin, cos, tan, log, pi, e 지원.",
     inputSchema: { type: "object", properties: { expression: { type: "string", description: "예: (3+4)*2**3" } }, required: ["expression"] },
-    execute: ({ expression }) => { showTool("calculator", expression); return String(safeEval(expression)); } },
+    execute: ({ expression }) => { showTool("calculator", String(expression)); return String(safeEval(expression)); } },
   { name: "current_time", description: "사용자 기기 기준 현재 날짜·시각·요일을 돌려줍니다.",
+    inputSchema: { type: "object", properties: {} },
     execute: () => { showTool("current_time", ""); return new Date().toLocaleString("ko-KR", { dateStyle: "full", timeStyle: "short" }); } },
   { name: "remember", description: "사용자에 대해 다음 대화에서도 기억할 사실 하나를 저장합니다. 저장 결과를 돌려줍니다.",
     inputSchema: { type: "object", properties: { fact: { type: "string" } }, required: ["fact"] },
@@ -225,9 +265,13 @@ const TOOLS = [
       await saveMemory(); return `${before - state.facts.length}개를 지웠어요`;
     } },
 ];
+const API_TOOLS = [
+  { type: "web_search_20260209", name: "web_search", max_uses: 5 },
+  ...TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.inputSchema })),
+];
 
 // ---------- 화면 ----------
-const esc = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
 function md(src) {
   const parts = src.split(/```[\w-]*\n?([\s\S]*?)(?:```|$)/g);
   let html = "";
@@ -248,33 +292,81 @@ const scrollDown = () => { $("log").scrollTop = $("log").scrollHeight; };
 function renderWelcome() {
   const p = PERSONAS[state.persona];
   const col = $("col");
-  col.innerHTML = `<div class="welcome"><h1>${esc(p.name)}에게 말을 걸어보세요</h1><p>${esc(p.desc)}. 계산, 시각 확인, 기억하기 도구를 스스로 써요.</p><div class="chips"></div></div>`;
+  if (state.mode === "api" && !client) { renderKeyBox(); return; }
+  const tools = state.mode === "api" ? "웹 검색, 계산, 시각 확인, 기억하기" : "계산, 시각 확인, 기억하기";
+  col.innerHTML = `<div class="welcome"><h1>${esc(p.name)}에게 말을 걸어보세요</h1><p>${esc(p.desc)}. ${tools} 도구를 스스로 써요.</p><div class="chips"></div></div>`;
   const chips = col.querySelector(".chips");
   for (const s of p.starters) {
     const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.textContent = s;
     b.onclick = () => send(s); chips.append(b);
   }
 }
+function renderKeyBox() {
+  $("col").innerHTML = `<div class="keybox">
+    <h2>Anthropic API 키를 넣어주세요</h2>
+    <p>크롬에서 파일로 열면 내 API 키로 Claude와 직접 대화해요. 웹 검색도 쓸 수 있어요. 키는 <a href="https://console.anthropic.com/settings/keys" target="_blank" rel="noopener">console.anthropic.com</a>에서 만들 수 있고, 사용한 만큼 요금이 나가요.</p>
+    <div class="keyrow"><input id="keyInput" type="password" placeholder="sk-ant-..." autocomplete="off" aria-label="API 키"><button class="send" id="keySave" type="button">저장</button></div>
+    <p>키는 이 컴퓨터의 브라우저에만 저장되고 Anthropic 말고는 어디에도 보내지 않아요. 남과 같이 쓰는 컴퓨터라면 다 쓴 뒤 'API 키 바꾸기'에서 지워 주세요.</p>
+  </div>`;
+  $("keySave").onclick = () => {
+    const k = $("keyInput").value.trim();
+    if (!k.startsWith("sk-ant-")) { $("keyInput").setCustomValidity("sk-ant- 로 시작하는 키를 넣어주세요"); $("keyInput").reportValidity(); return; }
+    store.set(KEY_STORE, k); connectApi(k);
+  };
+  $("keyInput").addEventListener("input", (e) => e.target.setCustomValidity(""));
+  $("keyInput").addEventListener("keydown", (e) => { if (e.key === "Enter") $("keySave").click(); });
+  $("keyInput").focus();
+}
 function setPersona(key) {
   if (state.busy) return;
-  state.persona = key; state.turns = [];
+  state.persona = key; state.turns = []; state.api = [];
   document.querySelectorAll(".persona").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.key === key)));
   $("personaSelect").value = key;
-  try { localStorage.setItem("my-ai-persona", key); } catch {}
+  store.set("my-ai-persona", key);
   renderWelcome();
 }
+function ready() { return (state.mode === "claude" && sample) || (state.mode === "api" && client); }
 function setBusy(b) {
   state.busy = b;
   $("send").textContent = b ? "멈추기" : "보내기";
-  $("send").disabled = !b && !sample;
+  $("send").disabled = !b && !ready();
 }
+function setMode(mode, label, on) {
+  state.mode = mode;
+  $("mode").textContent = label; $("mode").classList.toggle("on", on);
+  const api = mode === "api";
+  $("changeKey").hidden = $("changeKeyMobile").hidden = !api;
+}
+function showBanner(msg) { $("banner").textContent = msg; $("banner").hidden = !msg; }
 function addMsg(cls, html) {
-  $("col").querySelector(".welcome")?.remove();
+  $("col").querySelector(".welcome, .keybox")?.remove();
   const el = document.createElement("div"); el.className = "msg " + cls; el.innerHTML = html;
   $("col").append(el); scrollDown(); return el;
 }
 
-const ERRORS = {
+// ---------- 보내기 ----------
+async function send(text) {
+  if (state.busy || !ready() || !text.trim()) return;
+  const p = PERSONAS[state.persona];
+  addMsg("user", esc(text));
+  const bot = addMsg("bot", `<div class="who">${esc(p.name)}</div><div class="tools"></div><div class="body"><span class="thinking">생각하는 중</span></div>`);
+  const ui = { body: bot.querySelector(".body"), tools: bot.querySelector(".tools"), bot };
+  showTool = (name, arg) => {
+    const t = document.createElement("span"); t.className = "tool"; t.textContent = `${name}${arg ? " · " + arg : ""}`;
+    ui.tools.append(t); scrollDown();
+  };
+  state.ctl = new AbortController(); setBusy(true);
+  try {
+    if (state.mode === "claude") await sendViaClaude(text, ui);
+    else await sendViaApi(text, ui);
+  } finally {
+    setBusy(false); state.ctl = null; state.stream = null; $("input").focus();
+  }
+}
+const errLine = (ui, msg) => ui.body.insertAdjacentHTML("beforeend", `<div class="err">${esc(msg)}</div>`);
+
+// claude.ai 안: 보는 사람의 Claude 계정으로
+const SAMPLE_ERRORS = {
   not_granted: "Claude 사용이 허용되지 않았어요. 페이지를 새로고침하면 다시 물어봐요.",
   sampling_disabled: "이 계정에서는 Claude를 쓸 수 없어요.",
   rate_limited: "지금은 요청이 많아요. 잠시 뒤 다시 보내주세요.",
@@ -284,39 +376,127 @@ const ERRORS = {
   empty_completion: "답이 비어 있어요. 질문을 조금 바꿔 보세요.",
 };
 const HIDE = ["not_granted", "sampling_disabled", "not_declared", "capability_disabled", "capability_removed"];
-
-async function send(text) {
-  if (state.busy || !sample || !text.trim()) return;
-  const p = PERSONAS[state.persona];
-  addMsg("user", esc(text));
-  const bot = addMsg("bot", `<div class="who">${esc(p.name)}</div><div class="tools"></div><div class="body"><span class="thinking">생각하는 중</span></div>`);
-  const body = bot.querySelector(".body"), toolsEl = bot.querySelector(".tools");
-  showTool = (name, arg) => {
-    const t = document.createElement("span"); t.className = "tool"; t.textContent = `${name}${arg ? " · " + arg : ""}`;
-    toolsEl.append(t); scrollDown();
-  };
+async function sendViaClaude(text, ui) {
   state.turns.push({ role: "user", content: text });
-  const instructions = `${p.prompt}\n\n${RULES}\n\n지금까지 사용자에 대해 기억하는 내용:\n${state.facts.length ? state.facts.map((f) => "- " + f).join("\n") : "(없음)"}`;
-  const input = [{ role: "user", content: instructions }, ...state.turns.slice(-30)];
-  state.ctl = new AbortController(); setBusy(true);
+  const input = [{ role: "user", content: instructions() }, ...state.turns.slice(-30)];
   try {
-    const opts = { signal: state.ctl.signal, cache: false, onText: ({ text: t }) => { body.innerHTML = md(t); scrollDown(); } };
+    const opts = { signal: state.ctl.signal, cache: false, onText: ({ text: t }) => { ui.body.innerHTML = md(t); scrollDown(); } };
     if (toolsOk) { delete opts.cache; opts.tools = TOOLS; }
     const res = await sample(input, opts);
     state.turns.push({ role: "assistant", content: res.text });
-    body.innerHTML = md(res.text);
-    if (res.truncated) body.insertAdjacentHTML("beforeend", `<div class="err">답이 길어서 중간에 끊겼어요.</div>`);
+    ui.body.innerHTML = md(res.text);
+    if (res.truncated) errLine(ui, "답이 길어서 중간에 끊겼어요.");
   } catch (e) {
     const kept = e && e.code !== "refused" ? e.text : "";
-    body.innerHTML = kept ? md(kept) : "";
+    ui.body.innerHTML = kept ? md(kept) : "";
     if (kept) state.turns.push({ role: "assistant", content: kept });
-    if (e?.code !== "cancelled") body.insertAdjacentHTML("beforeend", `<div class="err">${esc(ERRORS[e?.code] || "연결이 끊겼어요. 다시 보내주세요.")}</div>`);
-    if (HIDE.includes(e?.code)) disable(ERRORS[e.code] || "이 화면에서는 Claude를 쓸 수 없어요.");
-  } finally {
-    setBusy(false); state.ctl = null; $("input").focus();
+    if (e?.code !== "cancelled") errLine(ui, SAMPLE_ERRORS[e?.code] || "연결이 끊겼어요. 다시 보내주세요.");
+    if (HIDE.includes(e?.code)) { sample = null; showBanner(SAMPLE_ERRORS[e.code] || "이 화면에서는 Claude를 쓸 수 없어요."); }
   }
 }
-function disable(msg) { sample = null; $("unavailable").textContent = msg; $("unavailable").hidden = false; $("send").disabled = true; }
+
+// 크롬 파일: 내 API 키로 Claude API 직접 호출 (웹 검색 포함)
+async function sendViaApi(text, ui) {
+  const start = state.api.length;
+  state.api.push({ role: "user", content: text });
+  let shown = "", round = "";
+  const paint = () => { ui.body.innerHTML = md(shown + round) || '<span class="thinking">생각하는 중</span>'; scrollDown(); };
+  const sources = new Map();
+  try {
+    for (let step = 0; step < 20; step++) {
+      if (state.ctl.signal.aborted) throw new DOMException("stopped", "AbortError");
+      round = "";
+      const stream = client.beta.messages.stream({
+        model: MODEL,
+        max_tokens: 64000,
+        system: instructions(),
+        messages: state.api,
+        tools: API_TOOLS,
+        output_config: { effort: "medium" },
+        // 안전 분류기가 거절하면 Anthropic 권장 모델로 자동 재시도
+        betas: ["server-side-fallback-2026-07-01"],
+        fallbacks: "default",
+      });
+      state.stream = stream;
+      stream.on("text", (delta) => { round += delta; paint(); });
+      stream.on("streamEvent", (ev) => {
+        if (ev.type === "content_block_start" && ev.content_block.type === "server_tool_use") showTool("web_search", "찾는 중");
+      });
+      const msg = await stream.finalMessage();
+      state.api.push({ role: "assistant", content: msg.content });
+      shown += round ? round + "\n\n" : ""; round = "";
+
+      for (const b of msg.content) {
+        if (b.type === "server_tool_use" && b.input?.query) {
+          const pending = [...ui.tools.children].find((c) => c.textContent === "web_search · 찾는 중");
+          if (pending) pending.textContent = "web_search · " + b.input.query;
+        }
+        if (b.type === "web_search_tool_result" && Array.isArray(b.content)) {
+          for (const r of b.content) if (r.url && sources.size < 6) sources.set(r.url, r.title || r.url);
+        }
+      }
+      paint();
+
+      if (msg.stop_reason === "refusal") { errLine(ui, "이 요청에는 답할 수 없어요. 다르게 물어봐 주세요."); break; }
+      if (msg.stop_reason === "pause_turn") continue;
+      if (msg.stop_reason !== "tool_use") {
+        if (msg.stop_reason === "max_tokens") errLine(ui, "답이 길어서 중간에 끊겼어요.");
+        break;
+      }
+      const results = [];
+      for (const b of msg.content) {
+        if (b.type !== "tool_use") continue;
+        const tool = TOOLS.find((t) => t.name === b.name);
+        try {
+          if (!tool) throw new Error("알 수 없는 도구: " + b.name);
+          const out = await tool.execute(b.input || {});
+          results.push({ type: "tool_result", tool_use_id: b.id, content: String(out) });
+        } catch (err) {
+          results.push({ type: "tool_result", tool_use_id: b.id, content: "오류: " + err.message, is_error: true });
+        }
+      }
+      state.api.push({ role: "user", content: results });
+    }
+    if (sources.size) {
+      const box = document.createElement("div"); box.className = "sources";
+      box.append("출처:");
+      for (const [url, title] of sources) {
+        const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = title; a.title = url; box.append(a);
+      }
+      ui.bot.append(box); scrollDown();
+    }
+  } catch (e) {
+    // 이번 턴을 통째로 되돌려서 다음 질문이 깨끗하게 시작되게
+    state.api.length = start;
+    paint();
+    if (state.ctl.signal.aborted || e?.name === "AbortError" || (Anthropic && e instanceof Anthropic.APIUserAbortError)) { errLine(ui, "멈췄어요."); return; }
+    errLine(ui, apiErrorText(e));
+    if (Anthropic && e instanceof Anthropic.AuthenticationError) { store.set(KEY_STORE, null); client = null; setTimeout(renderKeyBox, 1500); }
+  }
+}
+function apiErrorText(e) {
+  if (!Anthropic) return "연결에 실패했어요.";
+  if (e instanceof Anthropic.AuthenticationError) return "API 키가 올바르지 않아요. 키를 다시 넣어주세요.";
+  if (e instanceof Anthropic.PermissionDeniedError) return "이 API 키로는 이 기능을 쓸 수 없어요.";
+  if (e instanceof Anthropic.RateLimitError) return "요청이 너무 많거나 크레딧이 부족해요. 잠시 뒤 다시 시도해 주세요.";
+  if (e instanceof Anthropic.BadRequestError) return "요청 오류: " + (e.error?.error?.message || e.message);
+  if (e instanceof Anthropic.APIConnectionError) return "인터넷 연결을 확인해 주세요.";
+  if (e instanceof Anthropic.APIError) return `API 오류 (${e.status ?? "?"}): ${e.message}`;
+  return "알 수 없는 오류: " + (e?.message || e);
+}
+async function connectApi(key) {
+  try {
+    if (!Anthropic) Anthropic = (await import(SDK_URL)).default;
+  } catch {
+    showBanner("Claude 라이브러리를 불러오지 못했어요. 인터넷 연결을 확인하고 새로고침해 주세요.");
+    return;
+  }
+  client = new Anthropic({ apiKey: key, dangerouslyAllowBrowser: true });
+  showBanner("");
+  setBusy(false);
+  renderWelcome();
+  $("input").focus();
+}
 
 // ---------- 시작 ----------
 $("personas").innerHTML = Object.entries(PERSONAS).map(([k, p]) =>
@@ -325,27 +505,50 @@ $("personaSelect").innerHTML = Object.entries(PERSONAS).map(([k, p]) => `<option
 document.querySelectorAll(".persona").forEach((b) => (b.onclick = () => setPersona(b.dataset.key)));
 $("personaSelect").onchange = (e) => setPersona(e.target.value);
 $("reset").onclick = $("resetMobile").onclick = () => setPersona(state.persona);
+$("changeKey").onclick = $("changeKeyMobile").onclick = () => { if (state.busy) return; store.set(KEY_STORE, null); client = null; setBusy(false); renderKeyBox(); };
+$("saveFile").onclick = $("saveFileMobile").onclick = async () => {
+  try { await downloads.save({ filename: "나만의-AI-비서.html", data: new Blob([PRISTINE], { type: "text/html" }) }); }
+  catch (e) { if (e?.code !== "declined") showBanner("이 화면에서는 파일 저장이 안 돼요. GitHub 저장소의 artifact/my-ai.html 을 받아 크롬으로 열어주세요."); }
+};
 $("form").addEventListener("submit", (e) => {
   e.preventDefault();
-  if (state.busy) { state.ctl?.abort(); return; }
+  if (state.busy) { state.ctl?.abort(); state.stream?.abort(); return; }
   const t = $("input").value.trim(); if (!t) return;
   $("input").value = ""; $("input").style.height = "auto"; send(t);
 });
 $("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); } });
 $("input").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; });
 
-let saved = null; try { saved = localStorage.getItem("my-ai-persona"); } catch {}
-setPersona(PERSONAS[saved] ? saved : "friend");
+state.facts = loadLocalFacts();
+renderMemory();
+const savedPersona = store.get("my-ai-persona");
+state.persona = PERSONAS[savedPersona] ? savedPersona : "friend";
 $("send").disabled = true;
 
 (async () => {
-  if (!window.claude?.use) { disable("Claude 앱이나 claude.ai에서 열어야 대화할 수 있어요."); return; }
-  initMemory();
-  sample = await claude.use("sample");
-  if (!sample) { disable("이 화면에서는 Claude를 쓸 수 없어요. claude.ai에서 열어 주세요."); return; }
-  const limits = await sample.limits().catch(() => null);
-  toolsOk = Boolean(limits?.tools);
-  if (!toolsOk) TOOLS.length = 0;
-  setBusy(false);
+  const inViewer = Boolean(window.claude?.use);
+  if (inViewer) sample = await claude.use("sample");
+  if (sample) {
+    setMode("claude", "claude.ai 모드 · 웹 검색 꺼짐", true);
+    $("memNote").textContent = "대화 중에 알려준 내용을 AI가 저장해요.";
+    initCloudMemory();
+    const limits = await sample.limits().catch(() => null);
+    toolsOk = Boolean(limits?.tools);
+    downloads = await claude.use("downloads");
+    $("saveFile").hidden = $("saveFileMobile").hidden = !downloads;
+    setPersona(state.persona); setBusy(false);
+    return;
+  }
+  if (inViewer && location.protocol !== "file:") {
+    // claude.ai 주소에서 바로 열린 경우: 여기서는 외부 API 호출이 막혀 있어요
+    setMode("off", "사용 불가", false); setPersona(state.persona);
+    showBanner("claude.ai에 로그인한 상태로 링크를 열거나, 파일로 저장해 크롬에서 열어주세요.");
+    return;
+  }
+  setMode("api", "크롬 모드 · 웹 검색 켜짐", true);
+  $("memNote").textContent = "기억은 이 컴퓨터의 브라우저에만 저장돼요.";
+  setPersona(state.persona);
+  const key = store.get(KEY_STORE);
+  if (key) connectApi(key);
 })();
 </script>

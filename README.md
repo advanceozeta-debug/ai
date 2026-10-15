@@ -37,8 +37,14 @@ python -m my_ai.web --port 9000  # 포트 바꾸기
 
 ### 🔗 바로 써보기 (설치 없이)
 
-https://claude.ai/artifact/32zMFeLrj7XvkSQv1WqUTd — claude.ai에 올린 버전입니다. API 키 없이 내 Claude 계정으로 대화하고,
-기억은 사람마다 따로 비공개로 저장됩니다. 소스는 `artifact/index.html` (웹 검색·파일 읽기 도구는 빠져 있어요).
+**claude.ai에서:** https://claude.ai/artifact/32zMFeLrj7XvkSQv1WqUTd
+로그인한 내 Claude 계정으로 대화합니다 (API 키 필요 없음, 웹 검색은 꺼져 있음). 기억은 사람마다 비공개로 저장돼요.
+
+**크롬에서 (웹 검색 포함):** `artifact/my-ai.html` 파일을 받아서 크롬으로 엽니다.
+(또는 위 링크의 "크롬용 파일로 저장" 버튼). 처음 열면 Anthropic API 키를 물어보고,
+그 키로 Claude API를 직접 호출합니다. 키와 기억은 그 브라우저에만 저장돼요.
+
+`artifact/index.html` 은 claude.ai에 올리는 원본이고, `artifact/my-ai.html` 은 같은 내용을 크롬에서 바로 열 수 있게 감싼 파일입니다.
 
 ## 직접 고쳐보기
 
