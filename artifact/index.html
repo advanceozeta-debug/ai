@@ -159,12 +159,16 @@ const PERSONAS = {
 const MODEL = "claude-opus-5-5";
 const SDK_URL = "https://cdn.jsdelivr.net/npm/@anthropic-ai/sdk@0.129.0/+esm";
 const KEY_STORE = "my-ai-api-key";
+const SEARCH_SERVER = "Parallel Search";
+const SEARCH_SESSION = Array.from(crypto.getRandomValues(new Uint8Array(16)), (b) => b.toString(16).padStart(2, "0")).join("");
 const GITHUB_URL = "https://github.com/advanceozeta-debug/ai/blob/ccr-94219d03-4xwo5o/artifact/my-ai.html";
 
 const $ = (id) => document.getElementById(id);
 // mode: "loading" | "claude"(claude.ai 안) | "api"(크롬 파일 + API 키) | "off"
 const state = { mode: "loading", persona: "friend", turns: [], api: [], facts: [], busy: false, ctl: null, stream: null };
-let sample = null, toolsOk = false, memStore = null, downloads = null, Anthropic = null, client = null;
+let sample = null, toolsOk = false, memStore = null, downloads = null, Anthropic = null, client = null, mcp = null;
+let sources = new Map();
+const webOn = () => state.mode === "api" || (state.mode === "claude" && Boolean(mcp) && toolsOk);
 
 const store = {
   get(k) { try { return localStorage.getItem(k); } catch { return null; } },
@@ -176,7 +180,7 @@ function rules() {
 - 사용자가 쓰는 언어로 답하세요 (기본: 한국어).
 - 사용자에 대해 오래 기억할 만한 사실(이름, 선호, 목표 등)을 알게 되면 remember 도구로 저장하세요.
 - 계산은 추측하지 말고 calculator 도구를 쓰세요. 날짜·시각이 필요하면 current_time 도구를 쓰세요.
-${state.mode === "api"
+${webOn()
     ? "- 최신 정보·뉴스·날씨·가격처럼 바뀌는 정보는 web_search로 찾아보고, 어디서 찾았는지 짧게 밝히세요."
     : "- 지금은 웹 검색을 쓸 수 없어요. 최신 정보가 필요한 질문이면 그렇다고 말하고, 아는 범위에서 답하세요."}
 - 모르는 것은 모른다고 말하세요. 답은 간결하게, 필요할 때만 목록이나 코드 블록을 쓰세요.`;
@@ -271,6 +275,53 @@ const TOOLS = [
       await saveMemory(); return `${before - state.facts.length}개를 지웠어요`;
     } },
 ];
+// claude.ai 모드의 웹 검색: 보는 사람의 Parallel Search 커넥터를 씁니다
+const SEARCH_ERRORS = {
+  server_not_connected: "웹 검색을 쓰려면 claude.ai 설정 → 커넥터에서 Parallel Search를 추가해 주세요.",
+  needs_reauth: "Parallel Search 연결이 끊겼어요. claude.ai 설정 → 커넥터에서 다시 연결해 주세요.",
+  not_in_manifest: "이 페이지에서 Parallel Search 사용이 허용되지 않았어요. 페이지 권한 메뉴에서 켜면 돼요.",
+  approval_required: "웹 검색을 허용해야 검색할 수 있어요. 다시 보내면 허용할지 물어봐요.",
+  selection_required: "Parallel Search가 여러 개 연결돼 있어요. 어느 것을 쓸지 골라 주세요.",
+  blocked_by_policy: "조직 정책으로 Parallel Search가 막혀 있어요.",
+};
+const WEB_TOOL = {
+  name: "web_search", description: "웹을 검색해 결과(제목, 주소, 발췌)를 돌려줍니다. 뉴스·날씨·가격·최신 정보가 필요할 때 씁니다. 발췌로 답할 수 있으면 바로 답하세요.",
+  inputSchema: { type: "object", properties: {
+    objective: { type: "string", description: "무엇을 찾는지 한 문장으로" },
+    queries: { type: "array", items: { type: "string" }, description: "3~6단어 검색어 1~3개" },
+  }, required: ["objective", "queries"] },
+  execute: async ({ objective, queries }, ctx) => {
+    const obj = String(objective || "").trim();
+    let qs = Array.isArray(queries) ? queries.map(String).filter(Boolean).slice(0, 3) : [];
+    if (!qs.length && obj) qs = [obj];
+    if (!qs.length) throw new Error("검색어가 비었어요");
+    showTool("web_search", qs[0]);
+    let res;
+    try {
+      res = await mcp.callTool(SEARCH_SERVER, "web_search", { objective: obj || qs[0], search_queries: qs, session_id: SEARCH_SESSION }, { signal: ctx?.signal });
+    } catch (e) {
+      const msg = SEARCH_ERRORS[e?.code];
+      if (msg) showBanner(msg);
+      throw new Error(msg || (e?.code === "tool_error" ? "검색 오류: " + e.message : "검색 서버에 연결하지 못했어요"));
+    }
+    const results = Array.isArray(res?.payload?.results) ? res.payload.results : [];
+    if (!results.length) return "검색 결과가 없어요.";
+    return results.slice(0, 6).map((r) => {
+      if (r.url && sources.size < 6) sources.set(String(r.url), String(r.title || r.url));
+      const ex = (Array.isArray(r.excerpts) ? r.excerpts.join(" \n") : "").slice(0, 1500);
+      return { title: r.title, url: r.url, date: r.publish_date || undefined, excerpt: ex };
+    });
+  },
+};
+function renderSources(ui) {
+  if (!sources.size) return;
+  const box = document.createElement("div"); box.className = "sources";
+  box.append("출처:");
+  for (const [url, title] of sources) {
+    const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = title; a.title = url; box.append(a);
+  }
+  ui.bot.append(box); scrollDown();
+}
 const API_TOOLS = [
   { type: "web_search_20260209", name: "web_search", max_uses: 5 },
   ...TOOLS.map((t) => ({ name: t.name, description: t.description, input_schema: t.inputSchema })),
@@ -299,7 +350,7 @@ function renderWelcome() {
   const p = PERSONAS[state.persona];
   const col = $("col");
   if (state.mode === "api" && !client) { renderKeyBox(); return; }
-  const tools = state.mode === "api" ? "웹 검색, 계산, 시각 확인, 기억하기" : "계산, 시각 확인, 기억하기";
+  const tools = webOn() ? "웹 검색, 계산, 시각 확인, 기억하기" : "계산, 시각 확인, 기억하기";
   col.innerHTML = `<div class="welcome"><h1>${esc(p.name)}에게 말을 걸어보세요</h1><p>${esc(p.desc)}. ${tools} 도구를 스스로 써요.</p><div class="chips"></div></div>`;
   const chips = col.querySelector(".chips");
   for (const s of p.starters) {
@@ -308,7 +359,9 @@ function renderWelcome() {
   }
   if (state.mode === "claude") {
     const dl = document.createElement("div"); dl.className = "dl";
-    dl.innerHTML = `<div><b>크롬에서 웹 검색까지 쓰기</b><span>파일을 받아 크롬으로 열고, Anthropic API 키를 넣으면 웹 검색이 켜져요.</span></div>`;
+    dl.innerHTML = webOn()
+      ? `<div><b>크롬 파일로도 쓸 수 있어요</b><span>파일을 받아 크롬으로 열고 Anthropic API 키를 넣으면, claude.ai 로그인 없이 내 키로 돌아가요.</span></div>`
+      : `<div><b>크롬에서 웹 검색까지 쓰기</b><span>파일을 받아 크롬으로 열고, Anthropic API 키를 넣으면 웹 검색이 켜져요.</span></div>`;
     if (downloads) {
       const btn = document.createElement("button"); btn.type = "button"; btn.className = "send"; btn.textContent = "파일 받기";
       btn.onclick = saveFile; dl.append(btn);
@@ -374,6 +427,7 @@ async function send(text) {
     ui.tools.append(t); scrollDown();
   };
   state.ctl = new AbortController(); setBusy(true);
+  sources = new Map();
   try {
     if (state.mode === "claude") await sendViaClaude(text, ui);
     else await sendViaApi(text, ui);
@@ -399,11 +453,12 @@ async function sendViaClaude(text, ui) {
   const input = [{ role: "user", content: instructions() }, ...state.turns.slice(-30)];
   try {
     const opts = { signal: state.ctl.signal, cache: false, onText: ({ text: t }) => { ui.body.innerHTML = md(t); scrollDown(); } };
-    if (toolsOk) { delete opts.cache; opts.tools = TOOLS; }
+    if (toolsOk) { delete opts.cache; opts.tools = mcp ? [...TOOLS, WEB_TOOL] : TOOLS; }
     const res = await sample(input, opts);
     state.turns.push({ role: "assistant", content: res.text });
     ui.body.innerHTML = md(res.text);
     if (res.truncated) errLine(ui, "답이 길어서 중간에 끊겼어요.");
+    renderSources(ui);
   } catch (e) {
     const kept = e && e.code !== "refused" ? e.text : "";
     ui.body.innerHTML = kept ? md(kept) : "";
@@ -419,7 +474,6 @@ async function sendViaApi(text, ui) {
   state.api.push({ role: "user", content: text });
   let shown = "", round = "";
   const paint = () => { ui.body.innerHTML = md(shown + round) || '<span class="thinking">생각하는 중</span>'; scrollDown(); };
-  const sources = new Map();
   try {
     for (let step = 0; step < 20; step++) {
       if (state.ctl.signal.aborted) throw new DOMException("stopped", "AbortError");
@@ -475,14 +529,7 @@ async function sendViaApi(text, ui) {
       }
       state.api.push({ role: "user", content: results });
     }
-    if (sources.size) {
-      const box = document.createElement("div"); box.className = "sources";
-      box.append("출처:");
-      for (const [url, title] of sources) {
-        const a = document.createElement("a"); a.href = url; a.target = "_blank"; a.rel = "noopener"; a.textContent = title; a.title = url; box.append(a);
-      }
-      ui.bot.append(box); scrollDown();
-    }
+    renderSources(ui);
   } catch (e) {
     // 이번 턴을 통째로 되돌려서 다음 질문이 깨끗하게 시작되게
     state.api.length = start;
@@ -551,11 +598,13 @@ $("send").disabled = true;
   const inViewer = Boolean(window.claude?.use);
   if (inViewer) sample = await claude.use("sample");
   if (sample) {
-    setMode("claude", "claude.ai 모드 · 웹 검색 꺼짐", true);
     $("memNote").textContent = "대화 중에 알려준 내용을 AI가 저장해요.";
     initCloudMemory();
     const limits = await sample.limits().catch(() => null);
     toolsOk = Boolean(limits?.tools);
+    mcp = await claude.use("mcp");
+    state.mode = "claude";
+    setMode("claude", webOn() ? "claude.ai 모드 · 웹 검색 켜짐" : "claude.ai 모드 · 웹 검색 꺼짐", true);
     downloads = await claude.use("downloads");
     $("saveFile").hidden = $("saveFileMobile").hidden = !downloads;
     setPersona(state.persona); setBusy(false);

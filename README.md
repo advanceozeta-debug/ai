@@ -38,7 +38,8 @@ python -m my_ai.web --port 9000  # 포트 바꾸기
 ### 🔗 바로 써보기 (설치 없이)
 
 **claude.ai에서:** https://claude.ai/artifact/32zMFeLrj7XvkSQv1WqUTd
-로그인한 내 Claude 계정으로 대화합니다 (API 키 필요 없음, 웹 검색은 꺼져 있음). 기억은 사람마다 비공개로 저장돼요.
+로그인한 내 Claude 계정으로 대화합니다 (API 키 필요 없음). claude.ai 설정 → 커넥터에서 **Parallel Search**(무료)를 연결하면
+웹 검색도 켜집니다. 기억은 사람마다 비공개로 저장돼요.
 
 **크롬에서 (웹 검색 포함):** `artifact/my-ai.html` 파일을 받아서 크롬으로 엽니다.
 (또는 위 링크의 "크롬용 파일로 저장" 버튼). 처음 열면 Anthropic API 키를 물어보고,
