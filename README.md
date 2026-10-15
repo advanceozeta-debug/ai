@@ -1,6 +1,6 @@
-# 나만의 AI 비서 (my_ai)
+# 오미크론 (my_ai)
 
-Anthropic의 오픈소스 [Python SDK](https://github.com/anthropics/anthropic-sdk-python)로 Claude API 위에 만든 AI 비서입니다.
+Anthropic의 오픈소스 [Python SDK](https://github.com/anthropics/anthropic-sdk-python)로 Claude API 위에 만든 AI 비서 **오미크론**입니다.
 Claude 모델 가중치는 공개되어 있지 않기 때문에, 모델을 새로 학습하는 대신 **성격 · 기억 · 도구**를 직접 설계해서 나만의 AI를 만듭니다.
 
 ## 할 수 있는 것

@@ -28,7 +28,7 @@ class SessionRequest(BaseModel):
 
 
 def create_app(data_dir: Path = Path("data"), effort: str = "medium", web_search: bool = True, client=None) -> FastAPI:
-    app = FastAPI(title="나만의 AI 비서")
+    app = FastAPI(title="오미크론")
     # 브라우저 탭마다 대화 세션 하나. 기억(memory.json)은 모든 세션이 공유합니다.
     sessions: dict[str, tuple[Agent, threading.Lock]] = {}
 
@@ -92,7 +92,7 @@ def create_app(data_dir: Path = Path("data"), effort: str = "medium", web_search
 def main() -> None:
     import uvicorn
 
-    parser = argparse.ArgumentParser(description="나만의 AI 비서 웹 화면")
+    parser = argparse.ArgumentParser(description="오미크론 웹 화면")
     parser.add_argument("--host", default="127.0.0.1")
     parser.add_argument("--port", type=int, default=8000)
     parser.add_argument("--effort", default="medium", choices=["low", "medium", "high", "xhigh", "max"])

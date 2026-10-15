@@ -15,7 +15,7 @@ HELP = """명령어:
 
 
 def main() -> None:
-    parser = argparse.ArgumentParser(description="나만의 AI 비서")
+    parser = argparse.ArgumentParser(description="오미크론 — 나만의 AI 비서")
     parser.add_argument("--persona", default=DEFAULT_PERSONA, choices=PERSONAS)
     parser.add_argument("--effort", default="medium", choices=["low", "medium", "high", "xhigh", "max"])
     parser.add_argument("--no-web", action="store_true", help="웹 검색 끄기")

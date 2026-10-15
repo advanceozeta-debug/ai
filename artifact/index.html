@@ -1,4 +1,4 @@
-<title>나만의 AI 비서</title>
+<title>오미크론</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@400;500;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
@@ -103,7 +103,7 @@
 </style>
 
 <aside class="rail">
-  <div class="brand">나만의 AI 비서<small>성격 · 기억 · 도구를 가진 Claude</small><span class="mode" id="mode">연결 확인 중</span></div>
+  <div class="brand">오미크론<small>성격 · 기억 · 도구를 가진 Claude</small><span class="mode" id="mode">연결 확인 중</span></div>
   <section>
     <div class="label">성격</div>
     <div class="personas" id="personas"></div>
@@ -574,7 +574,7 @@ $("changeKey").onclick = $("changeKeyMobile").onclick = () => { if (state.busy) 
 async function saveFile() {
   if (!downloads) { showBanner("이 화면에서는 파일 저장이 안 돼요. 첫 화면의 GitHub 링크에서 받아주세요."); return; }
   try {
-    const r = await downloads.save({ filename: "나만의-AI-비서.html", data: new Blob([PRISTINE], { type: "text/html" }) });
+    const r = await downloads.save({ filename: "오미크론.html", data: new Blob([PRISTINE], { type: "text/html" }) });
     if (r !== false) showBanner("");
   } catch (e) { if (e?.code !== "declined") showBanner("이 화면에서는 파일 저장이 안 돼요. 첫 화면의 GitHub 링크에서 받아주세요."); }
 }
