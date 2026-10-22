@@ -177,7 +177,7 @@ def main() -> None:
         database_url=os.environ.get("DATABASE_URL"), password=password, locked=public and not password,
     )
     print(f"🌐 브라우저에서 http://{args.host}:{args.port} 을 여세요")
-    uvicorn.run(app, host=args.host, port=args.port, log_level="warning", proxy_headers=True, forwarded_allow_ips="*")
+    uvicorn.run(app, host=args.host, port=args.port, log_level="info", proxy_headers=True, forwarded_allow_ips="*")
 
 
 if __name__ == "__main__":

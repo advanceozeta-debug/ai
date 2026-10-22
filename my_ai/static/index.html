@@ -26,6 +26,7 @@
     }
   }
   * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
   html, body { height: 100%; margin: 0; }
   body { background: var(--bg); color: var(--fg); font: 16px/1.65 var(--font); display: flex; overflow: hidden;
     padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
@@ -156,11 +157,27 @@ async function api(path, body) {
 function showLogin(msg = "") { $("login").hidden = false; $("loginErr").textContent = msg; $("password").focus(); }
 $("loginForm").addEventListener("submit", async (e) => {
   e.preventDefault();
+  const btn = $("loginForm").querySelector("button");
+  btn.disabled = true;
   $("loginErr").textContent = "확인하는 중...";
-  const res = await api("/api/login", { password: $("password").value });
-  if (!res.ok) { $("loginErr").textContent = (await res.json()).detail || "들어갈 수 없어요."; return; }
-  $("login").hidden = true; $("password").value = "";
-  boot();
+  try {
+    // 무료 서버는 잠들었다 깨는 데 1분쯤 걸려요. 그보다 오래 걸리면 다시 누르라고 안내합니다.
+    const res = await fetch("/api/login", {
+      method: "POST", headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password: $("password").value }), signal: AbortSignal.timeout(90000),
+    });
+    if (!res.ok) {
+      const data = await res.json().catch(() => ({}));
+      $("loginErr").textContent = data.detail || (res.status >= 500 ? "서버가 준비 중이에요. 잠시 후 다시 눌러주세요." : "들어갈 수 없어요.");
+      return;
+    }
+    $("login").hidden = true; $("password").value = ""; $("loginErr").textContent = "";
+    boot();
+  } catch {
+    $("loginErr").textContent = "서버가 응답하지 않아요. 깨어나는 중일 수 있으니 잠시 후 다시 눌러주세요.";
+  } finally {
+    btn.disabled = false;
+  }
 });
 
 // ---------- 대화 ----------
