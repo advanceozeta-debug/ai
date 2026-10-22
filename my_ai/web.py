@@ -10,6 +10,7 @@ import argparse
 import hashlib
 import hmac
 import json
+import logging
 import os
 import queue
 import threading
@@ -109,7 +110,8 @@ def create_app(
 
     @app.get("/api/info")
     def info():
-        return {"brain": brain.label, "model": brain.model, "web_search": web_search}
+        key_set = brain.kind == "claude" or bool(brain.api_key)
+        return {"brain": brain.label, "model": brain.model, "web_search": web_search, "key_set": key_set, "key_name": brain.key_name}
 
     @app.get("/api/personas")
     def personas():
@@ -147,6 +149,7 @@ def create_app(
                     on_tool=lambda name, args: events.put({"type": "tool", "name": name, "input": args}),
                 )
             except Exception as e:
+                logging.getLogger("omicron").exception("대화 중 오류")  # Render 로그에서 원인을 볼 수 있게
                 events.put({"type": "error", "message": friendly_error(e) or f"알 수 없는 오류: {e}"})
             finally:
                 lock.release()

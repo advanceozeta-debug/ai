@@ -274,7 +274,10 @@ $("personaSelect").onchange = (e) => !busy && startSession(e.target.value);
 
 async function boot() {
   personas = await (await api("/api/personas")).json();
-  api("/api/info").then((r) => r.json()).then((i) => { $("brain").textContent = `두뇌: ${i.brain} · ${i.web_search ? "웹 검색 켜짐" : "웹 검색 없음"}`; }).catch(() => {});
+  api("/api/info").then((r) => r.json()).then((i) => {
+    $("brain").textContent = `두뇌: ${i.brain} · ${i.web_search ? "웹 검색 켜짐" : "웹 검색 없음"}`;
+    if (!i.key_set) { $("brain").textContent += ` · ⚠️ 서버에 ${i.key_name} 가 없어요`; $("brain").style.color = "var(--danger)"; }
+  }).catch(() => {});
   $("personas").innerHTML = personas.map((p) => `<button type="button" class="persona" data-key="${p.key}"><b>${esc(p.name)}</b><span>${esc(p.description)}</span></button>`).join("");
   $("personaSelect").innerHTML = personas.map((p) => `<option value="${p.key}">${esc(p.name)}</option>`).join("");
   document.querySelectorAll(".persona").forEach((b) => (b.onclick = () => !busy && startSession(b.dataset.key)));

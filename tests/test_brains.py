@@ -45,6 +45,14 @@ def test_brain_presets():
     b = brain_from_env({"BRAIN": "gemini", "GEMINI_API_KEY": "k"})
     assert (b.kind, b.api_key, b.web_search) == ("openai", "k", False)
     assert brain_from_env({"BRAIN": "groq", "BRAIN_MODEL": "x"}).model == "x"
+    assert brain_from_env({"BRAIN": "gemini", "GEMINI_API_KEY": '  "AIza-abc"\n'}).api_key == "AIza-abc"
+    assert brain_from_env({"BRAIN": "gemini"}).api_key is None
+
+
+def test_info_reports_missing_key(tmp_path):
+    web = TestClient(create_app(tmp_path, brain=brain_from_env({"BRAIN": "gemini"})))
+    info = web.get("/api/info").json()
+    assert (info["key_set"], info["key_name"]) == (False, "GEMINI_API_KEY")
 
 
 def test_free_brain_tool_loop(tmp_path):
@@ -70,7 +78,7 @@ def test_web_app_with_free_brain(tmp_path):
     requests = []
     brain = brain_from_env({"BRAIN": "gemini", "GEMINI_API_KEY": "test"})
     web = TestClient(create_app(tmp_path, client=make_client(requests), brain=brain))
-    assert web.get("/api/info").json() == {"brain": "Gemini (무료)", "model": "gemini-2.5-flash", "web_search": False}
+    assert web.get("/api/info").json() == {"brain": "Gemini (무료)", "model": "gemini-2.5-flash", "web_search": False, "key_set": True, "key_name": "GEMINI_API_KEY"}
     sid = web.post("/api/session", json={"persona": "friend"}).json()["session_id"]
     events = [json.loads(l) for l in web.post("/api/chat", json={"session_id": sid, "message": "hi"}).text.splitlines()]
     assert "".join(e["text"] for e in events if e["type"] == "text") == "답은 42예요!"

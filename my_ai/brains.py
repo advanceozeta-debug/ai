@@ -21,6 +21,7 @@ class Brain:
     model: str
     base_url: str | None = None
     api_key: str | None = None
+    key_name: str = "ANTHROPIC_API_KEY"  # 이 두뇌가 읽는 키 환경 변수 이름 (안내용)
 
     @property
     def web_search(self) -> bool:
@@ -41,4 +42,6 @@ def brain_from_env(env=os.environ) -> Brain:
     if name not in PRESETS:
         raise ValueError(f"알 수 없는 BRAIN 값: {name} (claude, gemini, groq, openrouter 중 하나)")
     label, base_url, model, key_env = PRESETS[name]
-    return Brain("openai", label, env.get("BRAIN_MODEL") or model, base_url, env.get(key_env) or env.get("BRAIN_API_KEY"))
+    # 복사할 때 딸려 온 공백·줄바꿈·따옴표는 지웁니다
+    key = (env.get(key_env) or env.get("BRAIN_API_KEY") or "").strip().strip('"').strip("'").strip()
+    return Brain("openai", label, env.get("BRAIN_MODEL") or model, base_url, key or None, key_env)

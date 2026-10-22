@@ -33,6 +33,8 @@ def friendly_error(e: Exception) -> str | None:
     # 무료 두뇌 (OpenAI 방식 API)
     if isinstance(e, openai.AuthenticationError):
         return "두뇌 API 키가 없거나 올바르지 않아요. GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY 를 확인해 주세요."
+    if isinstance(e, openai.BadRequestError) and "api key" in str(e).lower():
+        return "두뇌 API 키가 올바르지 않아요. Render 의 GEMINI_API_KEY(또는 GROQ/OPENROUTER) 값을 다시 복사해 넣어 주세요."
     if isinstance(e, openai.RateLimitError):
         return "무료 사용 한도를 넘었어요. 잠시(또는 내일) 후 다시 시도해 주세요."
     if isinstance(e, openai.NotFoundError):
