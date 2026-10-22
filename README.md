@@ -58,6 +58,20 @@ python -m my_ai.web --port 9000  # 포트 바꾸기
 `APP_PASSWORD` 가 없으면 서버는 잠긴 채로 열려서 아무도 쓸 수 없어요 (내 API 키 보호).
 무료 서버는 쉬다가 처음 열 때 30초~1분쯤 걸립니다.
 
+### 🧠 두뇌 고르기 (무료 모델도 가능)
+
+환경 변수 `BRAIN` 으로 언어 모델을 고릅니다. 성격·기억·대화 기록·화면은 그대로예요.
+
+| BRAIN | 필요한 키 | 비용 | 웹 검색 |
+|---|---|---|---|
+| `claude` (기본) | `ANTHROPIC_API_KEY` | 유료 (API 크레딧) | ✅ |
+| `gemini` | `GEMINI_API_KEY` ([aistudio.google.com](https://aistudio.google.com/apikey)) | 무료 등급 | ✗ |
+| `groq` | `GROQ_API_KEY` ([console.groq.com](https://console.groq.com/keys)) | 무료 등급 | ✗ |
+| `openrouter` | `OPENROUTER_API_KEY` ([openrouter.ai](https://openrouter.ai/keys)) | 무료 모델 | ✗ |
+
+모델 이름은 `BRAIN_MODEL` 로 바꿀 수 있어요 (예: `gemini-3.5-flash`). 무료 등급의 한도와 모델 목록은 자주 바뀌니
+각 사이트에서 확인하세요. 무료 등급은 입력 내용을 모델 개선에 쓸 수 있으니 민감한 이야기는 피하세요.
+
 ## 직접 고쳐보기
 
 - **새 성격 추가** → `my_ai/personas.py`의 `PERSONAS`에 항목 하나 추가
@@ -68,7 +82,8 @@ python -m my_ai.web --port 9000  # 포트 바꾸기
 
 ```
 my_ai/
-  agent.py     Claude 호출 + 도구 사용 루프
+  agent.py     모델 호출 + 도구 사용 루프
+  brains.py    두뇌(모델) 고르기: Claude / Gemini / Groq / OpenRouter
   personas.py  성격(시스템 프롬프트)
   tools.py     도구 정의와 실행
   memory.py    장기 기억 저장 (파일)

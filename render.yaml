@@ -12,6 +12,11 @@ services:
     envVars:
       - key: PYTHON_VERSION
         value: 3.12.7
+      # 두뇌: claude(유료) / gemini / groq / openrouter (무료 등급). my_ai/brains.py 참고
+      - key: BRAIN
+        value: gemini
+      - key: GEMINI_API_KEY
+        sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
       - key: APP_PASSWORD

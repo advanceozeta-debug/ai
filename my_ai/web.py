@@ -22,6 +22,7 @@ from fastapi.responses import FileResponse, JSONResponse, StreamingResponse
 from pydantic import BaseModel
 
 from .agent import Agent, friendly_error
+from .brains import Brain, brain_from_env
 from .personas import DEFAULT_PERSONA, PERSONAS
 from .storage import open_store
 
@@ -52,9 +53,12 @@ def create_app(
     database_url: str | None = None,
     password: str | None = None,
     locked: bool = False,
+    brain: Brain | None = None,
 ) -> FastAPI:
     app = FastAPI(title="오미크론")
     store = open_store(data_dir, database_url)
+    brain = brain or brain_from_env()
+    web_search = web_search and brain.web_search
     # 브라우저 탭마다 대화 세션 하나. 서버가 다시 켜지면 사라지지만, 기록은 저장소에 남아 이어서 열 수 있어요.
     sessions: dict[str, tuple[Agent, threading.Lock]] = {}
     if locked:  # 인터넷에 올렸는데 비밀번호가 없으면 아무도 못 들어오게 잠급니다
@@ -103,6 +107,10 @@ def create_app(
         response.set_cookie(COOKIE, token, max_age=60 * 60 * 24 * 365, httponly=True, samesite="lax", secure=secure)
         return {"ok": True}
 
+    @app.get("/api/info")
+    def info():
+        return {"brain": brain.label, "model": brain.model, "web_search": web_search}
+
     @app.get("/api/personas")
     def personas():
         return [{"key": k, "name": v["name"], "description": v["description"]} for k, v in PERSONAS.items()]
@@ -112,7 +120,7 @@ def create_app(
         if req.persona not in PERSONAS:
             raise HTTPException(400, "알 수 없는 성격입니다")
         conv_id = (store.latest_conversation(req.persona) if req.resume else None) or store.new_conversation(req.persona)
-        agent = Agent(req.persona, data_dir, effort=effort, web_search=web_search, client=client, store=store, conversation_id=conv_id)
+        agent = Agent(req.persona, data_dir, effort=effort, web_search=web_search, client=client, store=store, conversation_id=conv_id, brain=brain)
         session_id = uuid.uuid4().hex
         sessions[session_id] = (agent, threading.Lock())
         return {"session_id": session_id, "name": PERSONAS[req.persona]["name"], "history": agent.history}

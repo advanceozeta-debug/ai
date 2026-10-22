@@ -1,15 +1,18 @@
-"""AI의 두뇌: Claude API를 호출하고, 도구 사용 루프를 돌립니다."""
+"""AI의 두뇌: 언어 모델(Claude 또는 무료 모델)을 호출하고, 도구 사용 루프를 돌립니다."""
 
+import json
+import uuid
 from collections.abc import Callable
 from pathlib import Path
 
 import anthropic
+import openai
 
+from .brains import Brain, brain_from_env
 from .personas import build_system_prompt
 from .storage import FileStore
 from .tools import TOOLS, WEB_SEARCH_TOOL, run_tool
 
-MODEL = "claude-opus-5-5"
 MAX_STEPS = 20  # 한 질문에 도구를 연달아 쓸 수 있는 최대 횟수
 
 
@@ -27,6 +30,17 @@ def friendly_error(e: Exception) -> str | None:
         return f"API 오류 ({e.status_code}): {e.message}"
     if isinstance(e, anthropic.APIConnectionError):
         return "네트워크 연결을 확인해 주세요."
+    # 무료 두뇌 (OpenAI 방식 API)
+    if isinstance(e, openai.AuthenticationError):
+        return "두뇌 API 키가 없거나 올바르지 않아요. GEMINI_API_KEY / GROQ_API_KEY / OPENROUTER_API_KEY 를 확인해 주세요."
+    if isinstance(e, openai.RateLimitError):
+        return "무료 사용 한도를 넘었어요. 잠시(또는 내일) 후 다시 시도해 주세요."
+    if isinstance(e, openai.NotFoundError):
+        return "이 모델을 찾을 수 없어요. 무료 모델 이름이 바뀌었을 수 있으니 BRAIN_MODEL 을 확인해 주세요."
+    if isinstance(e, openai.APIStatusError):
+        return f"두뇌 API 오류 ({e.status_code}): {e.message}"
+    if isinstance(e, openai.APIConnectionError):
+        return "두뇌 서버에 연결하지 못했어요. 잠시 후 다시 시도해 주세요."
     return None
 
 
@@ -37,11 +51,17 @@ class Agent:
         data_dir: Path = Path("data"),
         effort: str = "medium",
         web_search: bool = True,
-        client: anthropic.Anthropic | None = None,
+        client=None,
         store=None,
         conversation_id: str | None = None,
+        brain: Brain | None = None,
     ):
-        self.client = client or anthropic.Anthropic()
+        self.brain = brain or brain_from_env()
+        if self.brain.kind == "claude":
+            self.client = client or anthropic.Anthropic()
+        else:
+            self.client = client or openai.OpenAI(base_url=self.brain.base_url, api_key=self.brain.api_key or "missing-key")
+        web_search = web_search and self.brain.web_search
         # store: 기억 + 대화 기록 저장소 (storage.py). 없으면 data/ 폴더의 파일을 씁니다.
         self.memory = store or FileStore(data_dir)
         self.workspace = data_dir / "workspace"
@@ -53,7 +73,7 @@ class Agent:
         self.messages: list = [{"role": m["role"], "content": m["text"]} for m in self.history if m["text"]]
         # 기억은 세션 시작 시점에 한 번만 넣습니다. 대화 중에 system을 바꾸면 프롬프트 캐시가 깨지기 때문입니다.
         self.system = (
-            f"{build_system_prompt(persona)}\n\n"
+            f"{build_system_prompt(persona, web_search)}\n\n"
             f"지금까지 사용자에 대해 기억하는 내용:\n{self.memory.as_text()}"
         )
 
@@ -84,11 +104,75 @@ class Agent:
 
     def _run(self, user_text: str, on_text: Callable[[str], None], on_tool: Callable[[str, dict], None]) -> str:
         self.messages.append({"role": "user", "content": user_text})
+        if self.brain.kind == "claude":
+            return self._run_claude(on_text, on_tool)
+        return self._run_openai(on_text, on_tool)
+
+    def _run_openai(self, on_text: Callable[[str], None], on_tool: Callable[[str, dict], None]) -> str:
+        """Gemini · Groq · OpenRouter 같은 OpenAI 방식 API 로 대화합니다."""
+        tools = [
+            {"type": "function", "function": {"name": t["name"], "description": t["description"], "parameters": t["input_schema"]}}
+            for t in self.tools
+        ]
+        for _ in range(MAX_STEPS):
+            stream = self.client.chat.completions.create(
+                model=self.brain.model,
+                messages=[{"role": "system", "content": self.system}, *self.messages],
+                tools=tools,
+                stream=True,
+            )
+            text, calls, finish = "", {}, None
+            for chunk in stream:
+                if not chunk.choices:
+                    continue
+                choice = chunk.choices[0]
+                delta = choice.delta
+                if delta.content:
+                    text += delta.content
+                    on_text(delta.content)
+                for tc in delta.tool_calls or []:
+                    call = calls.setdefault(tc.index or 0, {"id": "", "name": "", "arguments": ""})
+                    if tc.id:
+                        call["id"] = tc.id
+                    if tc.function and tc.function.name:
+                        call["name"] = tc.function.name
+                    if tc.function and tc.function.arguments:
+                        call["arguments"] += tc.function.arguments
+                finish = choice.finish_reason or finish
+
+            if not calls:
+                if finish == "length":
+                    on_text("\n(답변이 길어서 중간에 끊겼어요.)")
+                self.messages.append({"role": "assistant", "content": text})
+                return text
+
+            tool_calls = [
+                {"id": c["id"] or f"call_{uuid.uuid4().hex[:12]}", "type": "function",
+                 "function": {"name": c["name"], "arguments": c["arguments"] or "{}"}}
+                for _, c in sorted(calls.items())
+            ]
+            self.messages.append({"role": "assistant", "content": text or None, "tool_calls": tool_calls})
+            for tc in tool_calls:
+                try:
+                    args = json.loads(tc["function"]["arguments"])
+                    if not isinstance(args, dict):
+                        raise ValueError("인자가 객체가 아님")
+                except ValueError as e:
+                    result = f"오류: 도구 인자를 읽을 수 없어요 ({e})"
+                else:
+                    on_tool(tc["function"]["name"], args)
+                    result, _ = run_tool(tc["function"]["name"], args, self.memory, self.workspace)
+                self.messages.append({"role": "tool", "tool_call_id": tc["id"], "content": result})
+
+        on_text("\n(도구를 너무 많이 써서 여기서 멈췄어요.)")
+        return ""
+
+    def _run_claude(self, on_text: Callable[[str], None], on_tool: Callable[[str, dict], None]) -> str:
         final_text = ""
 
         for _ in range(MAX_STEPS):
             with self.client.beta.messages.stream(
-                model=MODEL,
+                model=self.brain.model,
                 max_tokens=64000,
                 system=self.system,
                 messages=self.messages,

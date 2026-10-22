@@ -4,7 +4,7 @@ BASE_RULES = """\
 - 사용자가 쓰는 언어로 답하세요 (기본: 한국어).
 - 사용자에 대해 오래 기억할 만한 사실(이름, 선호, 목표 등)을 알게 되면 remember 도구로 저장하세요.
 - 계산은 추측하지 말고 calculator 도구를 쓰세요.
-- 최신 정보가 필요하면 web_search를 쓰고, 출처를 짧게 밝히세요.
+{web_rule}
 - 모르는 것은 모른다고 말하세요."""
 
 PERSONAS: dict[str, dict[str, str]] = {
@@ -40,6 +40,11 @@ PERSONAS: dict[str, dict[str, str]] = {
 DEFAULT_PERSONA = "friend"
 
 
-def build_system_prompt(persona_key: str) -> str:
+def build_system_prompt(persona_key: str, web_search: bool = True) -> str:
     persona = PERSONAS[persona_key]
-    return f"{persona['prompt']}\n\n공통 규칙:\n{BASE_RULES}"
+    web_rule = (
+        "- 최신 정보가 필요하면 web_search를 쓰고, 출처를 짧게 밝히세요."
+        if web_search
+        else "- 지금은 웹 검색을 쓸 수 없어요. 최신 정보가 필요한 질문이면 그렇다고 말하고 아는 범위에서 답하세요."
+    )
+    return f"{persona['prompt']}\n\n공통 규칙:\n{BASE_RULES.format(web_rule=web_rule)}"
