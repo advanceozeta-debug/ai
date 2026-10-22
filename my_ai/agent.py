@@ -5,8 +5,8 @@ from pathlib import Path
 
 import anthropic
 
-from .memory import Memory
 from .personas import build_system_prompt
+from .storage import FileStore
 from .tools import TOOLS, WEB_SEARCH_TOOL, run_tool
 
 MODEL = "claude-opus-5-5"
@@ -32,17 +32,23 @@ class Agent:
     def __init__(
         self,
         persona: str,
-        data_dir: Path,
+        data_dir: Path = Path("data"),
         effort: str = "medium",
         web_search: bool = True,
         client: anthropic.Anthropic | None = None,
+        store=None,
+        conversation_id: str | None = None,
     ):
         self.client = client or anthropic.Anthropic()
-        self.memory = Memory(data_dir / "memory.json")
+        # store: 기억 + 대화 기록 저장소 (storage.py). 없으면 data/ 폴더의 파일을 씁니다.
+        self.memory = store or FileStore(data_dir)
         self.workspace = data_dir / "workspace"
         self.effort = effort
         self.tools = TOOLS + ([WEB_SEARCH_TOOL] if web_search else [])
-        self.messages: list = []
+        self.conversation_id = conversation_id
+        # 이어서 하는 대화는 저장해 둔 질문·답 글로 시작합니다.
+        self.history = self.memory.load_messages(conversation_id) if conversation_id else []
+        self.messages: list = [{"role": m["role"], "content": m["text"]} for m in self.history if m["text"]]
         # 기억은 세션 시작 시점에 한 번만 넣습니다. 대화 중에 system을 바꾸면 프롬프트 캐시가 깨지기 때문입니다.
         self.system = (
             f"{build_system_prompt(persona)}\n\n"
@@ -57,11 +63,22 @@ class Agent:
     ) -> str:
         """사용자 메시지를 보내고 최종 답변 텍스트를 돌려줍니다. 답변은 on_text로 실시간 전달됩니다."""
         start = len(self.messages)
+        shown: list[str] = []
+
+        def collect(text: str) -> None:
+            shown.append(text)
+            on_text(text)
+
         try:
-            return self._run(user_text, on_text, on_tool)
+            result = self._run(user_text, collect, on_tool)
         except Exception:
             del self.messages[start:]  # API 오류 시 이번 턴을 통째로 되돌려 다음 질문이 깨끗하게 시작되도록
             raise
+        if self.conversation_id:
+            turn = [{"role": "user", "text": user_text}, {"role": "assistant", "text": "".join(shown).strip()}]
+            self.memory.append_messages(self.conversation_id, turn)
+            self.history.extend(turn)
+        return result
 
     def _run(self, user_text: str, on_text: Callable[[str], None], on_tool: Callable[[str, dict], None]) -> str:
         self.messages.append({"role": "user", "content": user_text})

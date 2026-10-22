@@ -2,96 +2,124 @@
 <html lang="ko">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>오미크론</title>
+<link rel="manifest" href="/manifest.webmanifest">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="icon" href="/icon-192.png">
+<meta name="theme-color" content="#1d6b62">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="오미크론">
 <style>
   :root {
-    --bg: #f6f5f2; --panel: #ffffff; --text: #1f1f1d; --muted: #6b6a66;
-    --border: #e4e2dc; --accent: #c96442; --accent-text: #ffffff;
-    --user-bg: #ede9e1; --code-bg: #f1efea; --tool-bg: #f7f3ea;
+    --bg: #f3f5f4; --panel: #ffffff; --fg: #18211f; --muted: #5f6b68; --line: #dce2e0;
+    --accent: #1d6b62; --accent-ink: #ffffff; --accent-soft: #e2efec; --user: #e6ebe9; --code: #eef2f1; --danger: #b3261e;
+    --font: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #1c1b19; --panel: #262523; --text: #ecebe7; --muted: #a09e98;
-      --border: #3a3936; --accent: #d97757; --accent-text: #1c1b19;
-      --user-bg: #34322e; --code-bg: #1f1e1c; --tool-bg: #2e2b25;
+      --bg: #121716; --panel: #1a2120; --fg: #e5ebe9; --muted: #96a3a0; --line: #2b3533;
+      --accent: #5bbfb0; --accent-ink: #0d1413; --accent-soft: #1f3330; --user: #243030; --code: #0f1413; --danger: #f2a49d;
+      color-scheme: dark;
     }
   }
   * { box-sizing: border-box; }
   html, body { height: 100%; margin: 0; }
-  body {
-    background: var(--bg); color: var(--text);
-    font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Noto Sans KR", sans-serif;
-    display: flex;
-  }
-  aside {
-    width: 280px; flex-shrink: 0; border-right: 1px solid var(--border);
-    background: var(--panel); padding: 20px; display: flex; flex-direction: column; gap: 20px; overflow-y: auto;
-  }
-  aside h1 { font-size: 18px; margin: 0; }
-  aside h2 { font-size: 13px; color: var(--muted); margin: 0 0 8px; font-weight: 600; }
-  .persona {
-    display: block; width: 100%; text-align: left; padding: 10px 12px; margin-bottom: 6px;
-    border: 1px solid var(--border); border-radius: 10px; background: transparent; color: var(--text);
-    cursor: pointer; font: inherit;
-  }
-  .persona small { display: block; color: var(--muted); font-size: 13px; }
-  .persona.active { border-color: var(--accent); box-shadow: 0 0 0 1px var(--accent) inset; }
-  #memory { font-size: 14px; color: var(--muted); padding-left: 18px; margin: 0; }
-  #memory li { margin-bottom: 4px; }
+  body { background: var(--bg); color: var(--fg); font: 16px/1.65 var(--font); display: flex; overflow: hidden;
+    padding-top: env(safe-area-inset-top, 0px); padding-bottom: env(safe-area-inset-bottom, 0px); }
+  button { font: inherit; color: inherit; cursor: pointer; }
+  button:focus-visible, select:focus-visible, input:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  aside { width: 280px; flex-shrink: 0; background: var(--panel); border-right: 1px solid var(--line); padding: 22px 18px;
+    padding-left: max(18px, env(safe-area-inset-left, 0px)); display: flex; flex-direction: column; gap: 22px; overflow-y: auto; }
+  .brand { font-weight: 700; font-size: 19px; display: flex; align-items: center; gap: 10px; }
+  .brand img { width: 30px; height: 30px; border-radius: 8px; }
+  .label { font-size: 11px; font-weight: 600; color: var(--muted); letter-spacing: 0.08em; margin-bottom: 8px; }
+  .personas { display: grid; gap: 6px; }
+  .persona { text-align: left; background: transparent; border: 1px solid transparent; border-radius: 8px; padding: 9px 11px; }
+  .persona:hover { background: var(--accent-soft); }
+  .persona b { display: block; font-weight: 600; }
+  .persona span { display: block; font-size: 13px; color: var(--muted); }
+  .persona[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+  #memory { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 14px; }
+  #memory li::before { content: "· "; color: var(--accent); font-weight: 700; }
+  #memory .none { color: var(--muted); }
+  #memory .none::before { content: none; }
+  .ghost { background: none; border: 1px solid var(--line); border-radius: 8px; padding: 8px 12px; font-size: 14px; color: var(--muted); }
+  .ghost:hover { border-color: var(--accent); color: var(--fg); }
+
   main { flex: 1; display: flex; flex-direction: column; min-width: 0; }
   header { display: none; }
-  #log { flex: 1; overflow-y: auto; padding: 24px 16px; }
-  .inner { max-width: 760px; margin: 0 auto; }
-  .msg { margin-bottom: 20px; overflow-wrap: anywhere; }
-  .msg.user { background: var(--user-bg); padding: 10px 14px; border-radius: 14px; margin-left: auto; width: fit-content; max-width: 85%; white-space: pre-wrap; }
-  .msg.bot .who { font-size: 13px; color: var(--muted); margin-bottom: 4px; }
-  .msg.bot p { margin: 0 0 10px; }
-  .msg.error { color: #c0392b; }
-  .tool { font-size: 13px; color: var(--muted); background: var(--tool-bg); border-radius: 8px; padding: 4px 10px; margin: 6px 0; display: inline-block; }
-  pre { background: var(--code-bg); padding: 12px; border-radius: 8px; overflow-x: auto; font-size: 14px; }
-  code { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; background: var(--code-bg); padding: 1px 4px; border-radius: 4px; font-size: 0.9em; }
+  #log { flex: 1; overflow-y: auto; padding-block: 24px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  .col { max-width: 760px; margin: 0 auto; display: flex; flex-direction: column; gap: 20px; min-width: 0; }
+  .msg { overflow-wrap: anywhere; min-width: 0; }
+  .msg.user { align-self: flex-end; background: var(--user); padding: 10px 14px; border-radius: 14px 14px 4px 14px; max-width: 85%; white-space: pre-wrap; }
+  .who { font-size: 13px; font-weight: 600; color: var(--accent); margin-bottom: 4px; }
+  .body p { margin: 0 0 10px; }
+  .body p:last-child { margin: 0; }
+  .body ul { margin: 0 0 10px; padding-left: 20px; }
+  .msg.error .body { color: var(--danger); }
+  .tool { font: 12px var(--mono); color: var(--muted); border: 1px dashed var(--line); border-radius: 6px; padding: 2px 8px; margin: 0 6px 8px 0; display: inline-block; }
+  pre { background: var(--code); border: 1px solid var(--line); padding: 12px; border-radius: 8px; overflow-x: auto; font: 14px/1.5 var(--mono); }
+  code { font-family: var(--mono); background: var(--code); padding: 1px 4px; border-radius: 4px; font-size: 0.9em; }
   pre code { background: none; padding: 0; }
   .cursor::after { content: "▍"; animation: blink 1s steps(1) infinite; color: var(--accent); }
   @keyframes blink { 50% { opacity: 0; } }
-  .empty { text-align: center; color: var(--muted); margin-top: 18vh; }
-  .empty .big { font-size: 40px; }
-  form { padding: 12px 16px 20px; }
-  .composer { display: flex; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--border); border-radius: 16px; padding: 8px; }
-  textarea { flex: 1; border: none; resize: none; background: transparent; color: var(--text); font: inherit; padding: 6px 8px; max-height: 200px; outline: none; }
-  button.send { background: var(--accent); color: var(--accent-text); border: none; border-radius: 10px; padding: 8px 16px; font: inherit; font-weight: 600; cursor: pointer; }
-  button.send:disabled { opacity: 0.5; cursor: default; }
-  .reset { background: none; border: 1px solid var(--border); color: var(--muted); border-radius: 8px; padding: 6px 10px; font: inherit; font-size: 14px; cursor: pointer; }
+  .divider { text-align: center; font-size: 12px; color: var(--muted); }
+  .empty { text-align: center; color: var(--muted); margin-top: 16vh; }
+  .empty b { color: var(--fg); font-size: 22px; display: block; margin-bottom: 4px; }
+
+  form#form { padding-block: 10px 16px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); margin: 0; }
+  .composer { max-width: 760px; margin: 0 auto; display: flex; gap: 8px; align-items: flex-end; background: var(--panel); border: 1px solid var(--line); border-radius: 16px; padding: 8px; }
+  .composer:focus-within { border-color: var(--accent); }
+  textarea { flex: 1; min-width: 0; border: none; resize: none; background: transparent; color: var(--fg); font: inherit; padding: 6px 8px; max-height: 200px; outline: none; }
+  .send { background: var(--accent); color: var(--accent-ink); border: none; border-radius: 10px; padding: 9px 18px; font-weight: 600; }
+  .send:disabled { opacity: 0.5; cursor: default; }
+
+  #login { position: fixed; inset: 0; background: var(--bg); display: grid; place-items: center; z-index: 10;
+    padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); }
+  #login form { width: min(360px, 100%); display: grid; gap: 14px; text-align: center; }
+  #login img { width: 72px; height: 72px; border-radius: 18px; margin: 0 auto; }
+  #login h1 { margin: 0; font-size: 24px; }
+  #login input { font: inherit; padding: 12px 14px; border-radius: 10px; border: 1px solid var(--line); background: var(--panel); color: var(--fg); }
+  #loginErr { color: var(--danger); font-size: 14px; min-height: 1.4em; margin: 0; }
+
   @media (max-width: 760px) {
     body { flex-direction: column; }
     aside { display: none; }
-    header { display: flex; gap: 8px; padding: 10px 16px; border-bottom: 1px solid var(--border); background: var(--panel); }
-    header select { flex: 1; font: inherit; padding: 6px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text); }
+    header { display: flex; gap: 8px; align-items: center; padding-block: 10px; padding-left: max(16px, env(safe-area-inset-left, 0px)); padding-right: max(16px, env(safe-area-inset-right, 0px)); border-bottom: 1px solid var(--line); background: var(--panel); }
+    header select { flex: 1; min-width: 0; font: inherit; padding: 6px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--fg); }
   }
+  @media (prefers-reduced-motion: reduce) { .cursor::after { animation: none; } }
 </style>
 </head>
 <body>
+<div id="login" hidden>
+  <form id="loginForm">
+    <img src="/icon-192.png" alt="">
+    <h1>오미크론</h1>
+    <input id="password" type="password" placeholder="비밀번호" autocomplete="current-password" aria-label="비밀번호">
+    <button class="send" type="submit">들어가기</button>
+    <p id="loginErr"></p>
+  </form>
+</div>
 <aside>
-  <h1>🤖 오미크론</h1>
-  <section>
-    <h2>성격 고르기</h2>
-    <div id="personas"></div>
-  </section>
-  <section>
-    <h2>기억하는 내용</h2>
-    <ul id="memory"></ul>
-  </section>
-  <button class="reset" id="reset">대화 새로 시작</button>
+  <div class="brand"><img src="/icon-192.png" alt="">오미크론</div>
+  <section><div class="label">성격</div><div class="personas" id="personas"></div></section>
+  <section><div class="label">기억하는 내용</div><ul id="memory"></ul></section>
+  <button class="ghost" id="reset" type="button">새 대화</button>
 </aside>
 <main>
   <header>
     <select id="personaSelect" aria-label="성격"></select>
-    <button class="reset" id="resetMobile">새 대화</button>
+    <button class="ghost" id="resetMobile" type="button">새 대화</button>
   </header>
-  <div id="log"><div class="inner" id="inner"></div></div>
+  <div id="log"><div class="col" id="col"></div></div>
   <form id="form">
-    <div class="inner composer">
-      <textarea id="input" rows="1" placeholder="메시지를 입력하세요"></textarea>
+    <div class="composer">
+      <textarea id="input" rows="1" placeholder="메시지를 입력하세요" aria-label="메시지"></textarea>
       <button class="send" id="send">보내기</button>
     </div>
   </form>
@@ -100,66 +128,93 @@
 const $ = (id) => document.getElementById(id);
 let sessionId = null, personaKey = null, botName = "", busy = false, personas = [];
 
-const escapeHtml = (s) => s.replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
-
-// 아주 작은 마크다운 렌더러: 코드 블록, 인라인 코드, 굵게, 목록, 줄바꿈
-function renderMarkdown(src) {
-  const parts = src.split(/```(\w*)\n?([\s\S]*?)(?:```|$)/g);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function md(src) {
+  const parts = src.split(/```[\w-]*\n?([\s\S]*?)(?:```|$)/g);
   let html = "";
-  for (let i = 0; i < parts.length; i += 3) {
-    html += escapeHtml(parts[i]).split(/\n{2,}/).filter(Boolean).map((para) =>
-      "<p>" + para
-        .replace(/`([^`]+)`/g, "<code>$1</code>")
-        .replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>")
-        .replace(/\n/g, "<br>") + "</p>").join("");
-    if (i + 2 < parts.length) html += "<pre><code>" + escapeHtml(parts[i + 2]) + "</code></pre>";
-  }
+  parts.forEach((part, i) => {
+    if (i % 2) { html += "<pre><code>" + esc(part.replace(/\n$/, "")) + "</code></pre>"; return; }
+    for (const block of esc(part).split(/\n{2,}/)) {
+      if (!block.trim()) continue;
+      const inline = (t) => t.replace(/`([^`]+)`/g, "<code>$1</code>").replace(/\*\*([^*]+)\*\*/g, "<strong>$1</strong>");
+      const lines = block.split("\n");
+      if (lines.every((l) => /^\s*([-*]|\d+\.)\s/.test(l))) html += "<ul>" + lines.map((l) => "<li>" + inline(l.replace(/^\s*([-*]|\d+\.)\s/, "")) + "</li>").join("") + "</ul>";
+      else html += "<p>" + inline(block).replace(/\n/g, "<br>") + "</p>";
+    }
+  });
   return html;
 }
+const scrollDown = () => { $("log").scrollTop = $("log").scrollHeight; };
 
-function scrollDown() { $("log").scrollTop = $("log").scrollHeight; }
-
-function showEmpty() {
-  const p = personas.find((x) => x.key === personaKey);
-  $("inner").innerHTML = `<div class="empty"><div class="big">👋</div><p><strong>${escapeHtml(p.name)}</strong>에게 말을 걸어보세요<br><small>${escapeHtml(p.description)}</small></p></div>`;
+async function api(path, body) {
+  const res = await fetch(path, body === undefined ? {} : { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+  if (res.status === 401 && path !== "/api/login") { showLogin(); throw new Error("로그인이 필요해요."); }
+  return res;
 }
 
-async function startSession(key) {
-  personaKey = key;
-  const res = await fetch("/api/session", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ persona: key }) });
-  const data = await res.json();
-  sessionId = data.session_id; botName = data.name;
-  document.querySelectorAll(".persona").forEach((b) => b.classList.toggle("active", b.dataset.key === key));
-  $("personaSelect").value = key;
-  showEmpty();
-  loadMemory();
-}
+// ---------- 로그인 ----------
+function showLogin(msg = "") { $("login").hidden = false; $("loginErr").textContent = msg; $("password").focus(); }
+$("loginForm").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  $("loginErr").textContent = "확인하는 중...";
+  const res = await api("/api/login", { password: $("password").value });
+  if (!res.ok) { $("loginErr").textContent = (await res.json()).detail || "들어갈 수 없어요."; return; }
+  $("login").hidden = true; $("password").value = "";
+  boot();
+});
 
-async function loadMemory() {
-  const { facts } = await (await fetch("/api/memory")).json();
-  $("memory").innerHTML = facts.length ? facts.map((f) => `<li>${escapeHtml(f)}</li>`).join("") : "<li>아직 없음</li>";
-}
-
+// ---------- 대화 ----------
 function addMessage(cls, html) {
-  $("inner").querySelector(".empty")?.remove();
+  $("col").querySelector(".empty")?.remove();
   const div = document.createElement("div");
-  div.className = "msg " + cls;
-  div.innerHTML = html;
-  $("inner").appendChild(div);
-  scrollDown();
+  div.className = "msg " + cls; div.innerHTML = html;
+  $("col").appendChild(div); scrollDown();
   return div;
 }
-
-async function send(text) {
+function showEmpty() {
+  const p = personas.find((x) => x.key === personaKey);
+  $("col").innerHTML = `<div class="empty"><b>${esc(p.name)}</b>${esc(p.description)}<br>무엇이든 말을 걸어보세요.</div>`;
+}
+async function startSession(key, resume = true) {
+  personaKey = key;
+  const res = await api("/api/session", { persona: key, resume });
+  const data = await res.json();
+  sessionId = data.session_id; botName = data.name;
+  document.querySelectorAll(".persona").forEach((b) => b.setAttribute("aria-pressed", String(b.dataset.key === key)));
+  $("personaSelect").value = key;
+  try { localStorage.setItem("omicron-persona", key); } catch {}
+  if (!data.history.length) showEmpty();
+  else {
+    $("col").innerHTML = "";
+    for (const m of data.history) {
+      if (m.role === "user") addMessage("user", esc(m.text));
+      else addMessage("bot", `<div class="who">${esc(botName)}</div><div class="body">${md(m.text)}</div>`);
+    }
+    addMessage("divider", "지난 대화에서 이어서");
+  }
+  loadMemory();
+}
+async function loadMemory() {
+  const { facts } = await (await api("/api/memory")).json();
+  $("memory").innerHTML = facts.length ? facts.map((f) => `<li>${esc(f)}</li>`).join("") : '<li class="none">아직 없음</li>';
+}
+async function send(text, retried = false) {
   busy = true; $("send").disabled = true;
-  addMessage("user", escapeHtml(text));
-  const bot = addMessage("bot", `<div class="who">${escapeHtml(botName)}</div><div class="body cursor"></div>`);
+  if (!retried) addMessage("user", esc(text));
+  const bot = addMessage("bot", `<div class="who">${esc(botName)}</div><div class="body cursor"></div>`);
   const body = bot.querySelector(".body");
-  let answer = "", toolsHtml = "";
-  const paint = () => { body.innerHTML = toolsHtml + renderMarkdown(answer); scrollDown(); };
-
+  let answer = "", tools = "";
+  const paint = () => { body.innerHTML = tools + md(answer); scrollDown(); };
   try {
-    const res = await fetch("/api/chat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ session_id: sessionId, message: text }) });
+    const res = await api("/api/chat", { session_id: sessionId, message: text });
+    if (res.status === 404 && !retried) {
+      // 서버가 잠들었다 깨어나면 세션이 사라져요 → 저장된 대화로 다시 이어서 보내기
+      bot.remove(); busy = false;
+      const keep = $("col").innerHTML;
+      await startSession(personaKey, true);
+      $("col").innerHTML = keep;
+      return send(text, true);
+    }
     if (!res.ok) throw new Error((await res.json()).detail || res.statusText);
     const reader = res.body.getReader(), decoder = new TextDecoder();
     let buffer = "";
@@ -167,15 +222,14 @@ async function send(text) {
       const { value, done } = await reader.read();
       if (done) break;
       buffer += decoder.decode(value, { stream: true });
-      const lines = buffer.split("\n");
-      buffer = lines.pop();
+      const lines = buffer.split("\n"); buffer = lines.pop();
       for (const line of lines) {
         if (!line) continue;
         const ev = JSON.parse(line);
         if (ev.type === "text") answer += ev.text;
-        else if (ev.type === "tool") toolsHtml += `<div class="tool">🔧 ${escapeHtml(ev.name)} ${escapeHtml(JSON.stringify(ev.input))}</div>`;
+        else if (ev.type === "tool") tools += `<span class="tool">${esc(ev.name)} ${esc(JSON.stringify(ev.input))}</span>`;
         else if (ev.type === "error") { answer += (answer ? "\n\n" : "") + "⚠️ " + ev.message; bot.classList.add("error"); }
-        if (ev.type === "tool" && (ev.name === "remember" || ev.name === "forget")) setTimeout(loadMemory, 300);
+        if (ev.type === "tool" && (ev.name === "remember" || ev.name === "forget")) setTimeout(loadMemory, 500);
         paint();
       }
     }
@@ -190,25 +244,29 @@ async function send(text) {
 $("form").addEventListener("submit", (e) => {
   e.preventDefault();
   const text = $("input").value.trim();
-  if (!text || busy) return;
+  if (!text || busy || !sessionId) return;
   $("input").value = ""; $("input").style.height = "auto";
   send(text);
 });
-$("input").addEventListener("keydown", (e) => {
-  if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); }
-});
+$("input").addEventListener("keydown", (e) => { if (e.key === "Enter" && !e.shiftKey && !e.isComposing) { e.preventDefault(); $("form").requestSubmit(); } });
 $("input").addEventListener("input", (e) => { e.target.style.height = "auto"; e.target.style.height = e.target.scrollHeight + "px"; });
-$("reset").onclick = $("resetMobile").onclick = () => !busy && startSession(personaKey);
+$("reset").onclick = $("resetMobile").onclick = () => !busy && startSession(personaKey, false);
 $("personaSelect").onchange = (e) => !busy && startSession(e.target.value);
 
-(async () => {
-  personas = await (await fetch("/api/personas")).json();
-  $("personas").innerHTML = personas.map((p) =>
-    `<button class="persona" data-key="${p.key}">${escapeHtml(p.name)}<small>${escapeHtml(p.description)}</small></button>`).join("");
-  $("personaSelect").innerHTML = personas.map((p) => `<option value="${p.key}">${escapeHtml(p.name)}</option>`).join("");
-  document.querySelectorAll(".persona").forEach((b) => b.onclick = () => !busy && startSession(b.dataset.key));
-  startSession(personas[0].key);
+async function boot() {
+  personas = await (await api("/api/personas")).json();
+  $("personas").innerHTML = personas.map((p) => `<button type="button" class="persona" data-key="${p.key}"><b>${esc(p.name)}</b><span>${esc(p.description)}</span></button>`).join("");
+  $("personaSelect").innerHTML = personas.map((p) => `<option value="${p.key}">${esc(p.name)}</option>`).join("");
+  document.querySelectorAll(".persona").forEach((b) => (b.onclick = () => !busy && startSession(b.dataset.key)));
+  let saved = null; try { saved = localStorage.getItem("omicron-persona"); } catch {}
+  await startSession(personas.some((p) => p.key === saved) ? saved : personas[0].key);
   $("input").focus();
+}
+(async () => {
+  const auth = await (await fetch("/api/auth")).json();
+  if (auth.locked) showLogin("서버에 APP_PASSWORD 가 아직 설정되지 않았어요.");
+  else if (!auth.ok) showLogin();
+  else boot();
 })();
 </script>
 </body>
