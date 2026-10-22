@@ -19,6 +19,8 @@ def friendly_error(e: Exception) -> str | None:
         return "API 키가 올바르지 않아요. ANTHROPIC_API_KEY 를 확인해 주세요."
     if isinstance(e, TypeError) and "authentication" in str(e):
         return "API 키가 없어요. export ANTHROPIC_API_KEY=... 로 설정한 뒤 다시 실행해 주세요."
+    if isinstance(e, anthropic.BadRequestError) and "credit balance" in str(e):
+        return "Anthropic API 크레딧이 부족해요. console.anthropic.com → Plans & Billing 에서 크레딧을 충전해 주세요."
     if isinstance(e, anthropic.RateLimitError):
         return "요청이 너무 많아요. 잠시 후 다시 시도해 주세요."
     if isinstance(e, anthropic.APIStatusError):

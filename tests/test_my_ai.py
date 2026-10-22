@@ -96,3 +96,14 @@ def test_agent_rolls_back_on_error(tmp_path):
     with pytest.raises(RuntimeError):
         agent.ask("안녕", on_text=lambda t: None)
     assert agent.messages == []
+
+
+def test_credit_error_is_friendly():
+    import httpx2 as httpx
+    import anthropic
+    from my_ai.agent import friendly_error
+
+    req = httpx.Request("POST", "https://api.anthropic.com/v1/messages")
+    res = httpx.Response(400, request=req)
+    err = anthropic.BadRequestError("Your credit balance is too low to access the Anthropic API.", response=res, body=None)
+    assert "크레딧" in friendly_error(err)
