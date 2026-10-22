@@ -47,6 +47,17 @@ python -m my_ai.web --port 9000  # 포트 바꾸기
 
 `artifact/index.html` 은 claude.ai에 올리는 원본이고, `artifact/my-ai.html` 은 같은 내용을 크롬에서 바로 열 수 있게 감싼 파일입니다.
 
+### 📱 태블릿에서 쓰기 (내 서버 + 내 데이터베이스)
+
+기억과 대화 기록을 내 PostgreSQL(Neon)에 저장하고, Render에 올려서 태블릿 홈 화면 앱처럼 씁니다.
+
+1. Render 대시보드 → **New → Blueprint** → 이 저장소 선택 (`render.yaml` 을 읽어요)
+2. 값 세 개 입력: `ANTHROPIC_API_KEY`, `APP_PASSWORD`(들어갈 때 쓸 비밀번호), `DATABASE_URL`(Neon 연결 주소)
+3. 배포가 끝나면 나오는 `https://omicron-….onrender.com` 을 태블릿에서 열고 **홈 화면에 추가**
+
+`APP_PASSWORD` 가 없으면 서버는 잠긴 채로 열려서 아무도 쓸 수 없어요 (내 API 키 보호).
+무료 서버는 쉬다가 처음 열 때 30초~1분쯤 걸립니다.
+
 ## 직접 고쳐보기
 
 - **새 성격 추가** → `my_ai/personas.py`의 `PERSONAS`에 항목 하나 추가
@@ -60,7 +71,8 @@ my_ai/
   agent.py     Claude 호출 + 도구 사용 루프
   personas.py  성격(시스템 프롬프트)
   tools.py     도구 정의와 실행
-  memory.py    장기 기억 저장
+  memory.py    장기 기억 저장 (파일)
+  storage.py   기억 + 대화 기록 저장 (PostgreSQL 또는 파일)
   cli.py       터미널 대화 화면
   web.py       웹 서버 (FastAPI, 답변을 실시간 스트리밍)
   static/      웹 화면 (index.html 한 파일)

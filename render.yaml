@@ -1,0 +1,20 @@
+# Render 블루프린트: 대시보드 → New → Blueprint 에서 이 저장소를 고르면 오미크론 서버가 만들어집니다.
+# sync: false 인 값(비밀)은 만들 때 대시보드에서 직접 입력합니다. 이 파일에는 비밀을 적지 마세요.
+services:
+  - type: web
+    name: omicron
+    runtime: python
+    plan: free
+    region: singapore
+    branch: ccr-94219d03-4xwo5o
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m my_ai.web --host 0.0.0.0
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.12.7
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: APP_PASSWORD
+        sync: false
+      - key: DATABASE_URL
+        sync: false
