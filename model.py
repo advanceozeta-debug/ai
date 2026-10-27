@@ -15,7 +15,7 @@ import torch.nn.functional as F
 
 
 class Config:
-    def __init__(self, vocab_size, block_size=128, n_layer=4, n_head=4, n_embd=128, dropout=0.1):
+    def __init__(self, vocab_size, block_size=128, n_layer=4, n_head=6, n_embd=192, dropout=0.1):
         self.vocab_size = vocab_size  # 아는 글자 수
         self.block_size = block_size  # 한 번에 볼 수 있는 최대 글자 수(기억 길이)
         self.n_layer = n_layer        # 블록 층 수

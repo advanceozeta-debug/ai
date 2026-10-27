@@ -2,3 +2,8 @@ __pycache__/
 data.txt
 weights.json
 train.log
+corpus/
+pretrain.txt
+dialog.txt
+base.pt
+*.log

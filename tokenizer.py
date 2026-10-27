@@ -6,8 +6,11 @@ UNK = "□"  # 배운 적 없는 글자는 □ 로 처리
 
 
 class CharTokenizer:
-    def __init__(self, chars):
-        self.chars = [UNK] + sorted(set(chars) - {UNK})
+    def __init__(self, text, min_count=1):
+        # 너무 드물게 나오는 글자(오타, 특수문자)는 □ 하나로 묶어 사전을 작게 유지
+        from collections import Counter
+        keep = [c for c, n in Counter(text).items() if n >= min_count and c != UNK]
+        self.chars = [UNK] + sorted(keep)
         self.stoi = {c: i for i, c in enumerate(self.chars)}
 
     @property

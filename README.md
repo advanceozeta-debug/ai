@@ -49,3 +49,15 @@ python build_web.py    # omicron.html 만들기
 ```
 
 `omicron.html` 은 브라우저만 있으면 열려요. 모델 계산은 `web/engine.js` 에서 자바스크립트로 직접 해요. 서버가 필요 없고, 성격을 바꿔 다시 학습했다면 위 두 줄을 다시 실행하면 돼요.
+
+## 한국어 배우기 (2단계 학습)
+
+성격 대화만으로는 같은 말만 반복해서, 실제 한국어 글을 먼저 읽힌 뒤 대화를 가르쳐요.
+
+```bash
+python prepare_korean.py   # 공개 데이터 받기 + pretrain.txt, dialog.txt 생성
+python train.py --data pretrain.txt --iters 3000 --out base.pt --vocab-from pretrain.txt dialog.txt   # 1단계 한국어 (CPU 약 1시간)
+python train.py --data dialog.txt --init base.pt --iters 1200 --lr 5e-4                               # 2단계 대화+성격 (약 25분)
+```
+
+사용한 데이터: 한국어 챗봇 데이터 (songys/Chatbot_data, MIT), 네이버 영화 리뷰 NSMC (e9t/nsmc, CC0).
