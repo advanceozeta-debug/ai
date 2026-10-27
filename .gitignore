@@ -1,9 +1,13 @@
 __pycache__/
 data.txt
 weights.json
-train.log
+*.log
 corpus/
 pretrain.txt
 dialog.txt
 base.pt
-*.log
+data/
+data_test/
+brain_new/
+base_big.pt
+omicron_big.pt

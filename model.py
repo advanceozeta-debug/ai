@@ -49,12 +49,17 @@ class SelfAttention(nn.Module):
         k = k.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
         v = v.view(B, T, self.n_head, self.head_dim).transpose(1, 2)
 
-        # 점수 = Q·K / √d   (얼마나 관련 있나)
-        att = (q @ k.transpose(-2, -1)) / math.sqrt(self.head_dim)
-        att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
-        att = F.softmax(att, dim=-1)       # 점수 → 비율
-        att = self.drop(att)
-        y = att @ v                         # 비율만큼 내용을 섞는다
+        if x.is_cuda:
+            # GPU에서는 아래와 똑같은 계산을 한 번에 빠르게 해 주는 함수를 쓴다
+            y = F.scaled_dot_product_attention(q, k, v, is_causal=True,
+                                               dropout_p=self.drop.p if self.training else 0.0)
+        else:
+            # 점수 = Q·K / √d   (얼마나 관련 있나)
+            att = (q @ k.transpose(-2, -1)) / math.sqrt(self.head_dim)
+            att = att.masked_fill(self.mask[:, :, :T, :T] == 0, float("-inf"))
+            att = F.softmax(att, dim=-1)       # 점수 → 비율
+            att = self.drop(att)
+            y = att @ v                         # 비율만큼 내용을 섞는다
         y = y.transpose(1, 2).contiguous().view(B, T, C)
         return self.drop(self.proj(y))
 

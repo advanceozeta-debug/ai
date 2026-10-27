@@ -1,63 +1,66 @@
-# 오미크론 — 처음부터 직접 만든 작은 AI
+# 오미크론 — 처음부터 직접 만든 AI
 
-미리 학습된 모델을 하나도 쓰지 않고, **빈 숫자 덩어리에서 시작해서** 직접 쓴 대화만으로 성격과 말투를 배운 작은 언어 모델(GPT 구조)이에요.
+미리 학습된 모델을 하나도 쓰지 않고, **빈 숫자 덩어리에서 시작해서** 직접 읽힌 글로 한국어와 성격을 배운 언어 모델(GPT 구조)이에요.
+
+- 대화하기: https://advanceozeta-debug.github.io/ai/ (태블릿·휴대폰 브라우저에서 바로, 계산은 기기 안에서)
+- 크게 키우기: [![Colab에서 열기](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/advanceozeta-debug/ai/blob/main/omicron_colab.ipynb)
+
+## 오미크론 단계
+
+| 단계 | 두뇌 숫자 | 읽은 글 | 사전 | 어디서 학습 |
+|---|---|---|---|---|
+| 1. 성격만 | 86만 | 성격 대화 70만 글자 | 글자 369개 | CPU 15분 |
+| 2. 한국어 (지금 웹페이지) | 222만 | 리뷰·대화 1000만 글자 | 글자 2,185개 | CPU 1시간 반 |
+| 3. 큰 오미크론 | 약 2천만 | 위키백과 포함 9000만 글자 | 단어 조각 16,000개 | Colab GPU 약 50분 |
+
+## 큰 오미크론 만들기 (Colab)
+
+1. 위 **Colab에서 열기** 버튼 → 메뉴 **런타임 → 런타임 유형 변경 → T4 GPU**
+2. **런타임 → 모두 실행** (약 50분)
+3. 마지막에 받은 `model.bin`, `tokenizer.json` 을 이 저장소 `brain/` 폴더에 업로드 (**Add file → Upload files**)
+4. 1~2분 뒤 웹페이지를 새로고침하면 새 두뇌로 대화
 
 ## 파일 구성
 
 | 파일 | 하는 일 |
 |---|---|
-| `persona.py` | **성격 정의.** 이름, 말투, 좋아하는 것, 대답들. 여기를 바꾸면 다른 AI가 됨 |
-| `make_data.py` | persona.py 의 대화 조각을 섞어 학습용 `data.txt` 생성 |
-| `tokenizer.py` | 글자 ↔ 숫자 변환 사전 (글자 단위) |
+| `persona.py` | **성격 정의.** 이름, 말투, 대답들. 여기를 바꾸면 다른 AI가 됨 |
 | `model.py` | GPT 본체: 어텐션, 트랜스포머 블록, 문장 생성 — 전부 직접 구현 |
-| `train.py` | 학습 ("다음 글자 맞히기" 반복) |
-| `chat.py` | 학습된 오미크론과 대화 |
+| `tokenizer.py` | 글자 단위 사전 (1·2단계) |
+| `make_data.py` | persona.py → 성격 대화 `data.txt` |
+| `prepare_korean.py` | 리뷰·일상 대화 데이터 받기 → `pretrain.txt`, `dialog.txt` |
+| `train.py`, `chat.py` | 1·2단계 학습과 대화 (CPU) |
+| `big_prepare.py` | 위키백과 + 단어 조각 사전(BPE) + 번호로 바꾸기 (3단계) |
+| `big_train.py`, `big_chat.py` | 3단계 학습(GPU)과 대화 |
+| `export_brain.py` | 학습된 두뇌 → 웹페이지용 `brain/` (8비트 압축) |
+| `index.html`, `web/brain_engine.js` | 웹 대화 화면과 브라우저용 두뇌 계산기 |
+| `omicron_colab.ipynb` | Colab 노트북 (`make_notebook.py` 로 생성) |
 
-## 실행 방법
+## 직접 실행 (컴퓨터)
 
 ```bash
-pip install torch
-python make_data.py   # 1. 성격 → 학습 데이터
-python train.py       # 2. 학습 (CPU 10~15분, GPU 1~2분)
-python chat.py        # 3. 대화
+pip install torch tokenizers
+# 2단계 (CPU)
+python prepare_korean.py
+python train.py --data pretrain.txt --iters 3000 --out base.pt --vocab-from pretrain.txt dialog.txt
+python train.py --data dialog.txt --init base.pt --iters 1200 --lr 5e-4
+python chat.py
+python export_brain.py --model model.pt --tokenizer vocab.json      # → brain/
 ```
 
 ## 나만의 성격으로 바꾸기
 
-1. `persona.py` 에서 `NAME` 을 원하는 이름으로 바꿔요.
-2. `INTENTS` 의 대답들을 원하는 말투로 고쳐요. 예: 존댓말 집사, 츤데레 고양이, 무뚝뚝한 해적.
-3. 새 주제를 넣고 싶으면 `([사람이 할 말들], [AI 대답들])` 묶음을 추가해요.
-4. `make_data.py` → `train.py` 를 다시 실행하면 새 성격으로 태어나요.
+1. `persona.py` 에서 `NAME` 과 `INTENTS` 의 대답들을 원하는 말투로 고쳐요.
+2. 새 주제는 `([사람이 할 말들], [AI 대답들])` 묶음으로 추가해요.
+3. 다시 학습하면 새 성격으로 태어나요.
 
-팁: 같은 의미의 질문을 여러 표현으로 많이 적을수록 처음 보는 말에도 더 잘 대답해요.
+## 할 수 있는 것과 없는 것
 
-## 이 AI가 할 수 있는 것과 없는 것
-
-- 할 수 있음: 가르쳐 준 말투와 성격 유지, 배운 주제에 대한 대화, 비슷한 표현 알아듣기
-- 못함: 배운 적 없는 지식, 계산, 긴 논리. 파라미터가 약 86만 개라 ChatGPT(수천억 개)와는 규모가 완전히 달라요.
-- 더 똑똑하게 하려면: 대화 데이터를 늘리고 → `model.py` 의 `n_embd`, `n_layer` 를 키우고 → 더 오래 학습
+- 할 수 있음: 자연스러운 한국어 문장, 감정에 맞춘 짧은 대답, 정해 준 말투와 성격 유지
+- 어려움: 정확한 지식, 계산, 긴 논리, 코딩. 이런 걸 잘하는 AI는 이보다 수백~수만 배 크고 수천억 글자를 읽어요.
 
 ## 원리 한 줄 요약
 
-모델은 "지금까지 글자들을 보고 다음 글자 맞히기"만 배워요. 오미크론 말투로 쓴 대화만 보고 이걸 수천 번 반복하니까, 자연스럽게 오미크론처럼 말하게 되는 거예요.
+모델은 "지금까지 나온 글을 보고 다음 조각 맞히기"만 배워요. 이걸 수천만 번 반복하면 문법과 말투가 숫자 속에 새겨져요.
 
-## 태블릿·휴대폰에서 대화하기 (웹 버전)
-
-```bash
-python export_web.py   # 학습된 숫자들을 weights.json 으로 내보내기
-python build_web.py    # omicron.html 만들기
-```
-
-`omicron.html` 은 브라우저만 있으면 열려요. 모델 계산은 `web/engine.js` 에서 자바스크립트로 직접 해요. 서버가 필요 없고, 성격을 바꿔 다시 학습했다면 위 두 줄을 다시 실행하면 돼요.
-
-## 한국어 배우기 (2단계 학습)
-
-성격 대화만으로는 같은 말만 반복해서, 실제 한국어 글을 먼저 읽힌 뒤 대화를 가르쳐요.
-
-```bash
-python prepare_korean.py   # 공개 데이터 받기 + pretrain.txt, dialog.txt 생성
-python train.py --data pretrain.txt --iters 3000 --out base.pt --vocab-from pretrain.txt dialog.txt   # 1단계 한국어 (CPU 약 1시간)
-python train.py --data dialog.txt --init base.pt --iters 1200 --lr 5e-4                               # 2단계 대화+성격 (약 25분)
-```
-
-사용한 데이터: 한국어 챗봇 데이터 (songys/Chatbot_data, MIT), 네이버 영화 리뷰 NSMC (e9t/nsmc, CC0).
+사용한 데이터: 한국어 위키백과 (wikimedia/wikipedia, CC BY-SA), 한국어 챗봇 데이터 (songys/Chatbot_data, MIT), 네이버 영화 리뷰 NSMC (e9t/nsmc, CC0).
