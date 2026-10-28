@@ -65,16 +65,16 @@ canvas { image-rendering: pixelated; display: block; background: var(--night); }
     if (!checker) { ctx.fillStyle = "#0d1a29"; ctx.fillRect(0, 0, w, h); return; }
     for (let y = 0; y < h; y += 8) for (let x = 0; x < w; x += 8) { ctx.fillStyle = ((x + y) / 8) % 2 ? "#c83cc8" : "#78e678"; ctx.fillRect(x, y, 8, 8); }
   }
-  function drawCell(ctx, src, sx, sy, sw, sh, ax, ay) {
+  function drawCell(ctx, src, sx, sy, sw, sh, ax, ay, mx = 0, my = 0) {
     const w = sw * Z, h = sh * Z;
     ctx.imageSmoothingEnabled = false;
-    paintBg(ctx, w, h);
+    paintBg(ctx, ctx.canvas.width, ctx.canvas.height);
     ctx.save();
     if (flip) { ctx.translate(ax * Z * 2, 0); ctx.scale(-1, 1); }      // 기준점 기준 좌우 반전
-    ctx.drawImage(src, sx, sy, sw, sh, 0, 0, w, h);
+    ctx.drawImage(src, sx, sy, sw, sh, mx * Z, my * Z, w, h);
     ctx.restore();
     if (guide) {
-      ctx.fillStyle = "rgba(228,179,133,.55)"; ctx.fillRect(0, ay * Z, w, 1);
+      ctx.fillStyle = "rgba(228,179,133,.55)"; ctx.fillRect(0, ay * Z, ctx.canvas.width, 1);
       ctx.fillStyle = "#ff4d4d"; ctx.fillRect(ax * Z - 4, ay * Z, 9, 1); ctx.fillRect(ax * Z, ay * Z - 4, 1, 9);
     }
   }
@@ -86,7 +86,7 @@ canvas { image-rendering: pixelated; display: block; background: var(--night); }
     const ms = over === undefined ? a.frameMs : Array.isArray(over) ? over : a.frames.map(() => over);
     const sec = document.createElement("section");
     const left = document.createElement("div"), right = document.createElement("div");
-    const play = mk(64, 96); left.appendChild(play);
+    const play = mk(96, 96); left.appendChild(play);          // 내딛기까지 보이게 재생 창은 가로 96
     const rule = a.holdLast ? "재생 후 마지막 유지" : a.loop ? "반복" : "한 번";
     right.innerHTML = `<h2>${NAMES[name]} <small>${name} · ${a.frames.length}프레임 · ${rule} · ${ms.join("/")}ms</small></h2>`;
     const strip = document.createElement("div"); strip.className = "strip";
@@ -99,7 +99,7 @@ canvas { image-rendering: pixelated; display: block; background: var(--night); }
     right.appendChild(strip);
     if (a.note) { const n = document.createElement("div"); n.className = "note"; n.textContent = "보정: " + a.note; right.appendChild(n); }
     sec.append(left, right); list.appendChild(sec);
-    players.push({ kind: "char", a, ms, play, cells, i: 0, t: 0, wait: 0 });
+    players.push({ kind: "char", name, a, ms, play, cells, i: 0, t: 0, wait: 0, stepAcc: 0 });
   }
   for (const [name, e] of Object.entries(fx.effects)) {
     const sec = document.createElement("section");
@@ -114,9 +114,14 @@ canvas { image-rendering: pixelated; display: block; background: var(--night); }
     players.push({ kind: "fx", name, e, ms: Array(e.frames).fill(e.frameMs), play, cells, i: 0, t: 0, wait: 0 });
   }
 
-  function paint(p, c, i) {
+  const mot = (n, k, i) => ((C.motion[n] || {})[k] || [])[i] || 0;
+  function paint(p, c, i, live) {
     const ctx = c.getContext("2d");
-    if (p.kind === "char") { const f = p.a.frames[i]; drawCell(ctx, img, f.x, f.y, f.w, f.h, 32, 92); }
+    if (p.kind === "char") {
+      const f = p.a.frames[i], n = p.name;                    // 재생 창에서는 몸 움직임(dx·dy)까지 보여 줌
+      if (live) drawCell(ctx, img, f.x, f.y, f.w, f.h, 48, 92, 16 + mot(n, "dx", i) + p.stepAcc, mot(n, "dy", i));
+      else drawCell(ctx, img, f.x, f.y, f.w, f.h, 32, 92);
+    }
     else { const e = p.e; drawCell(ctx, fxImg[p.name], i * e.frameW, 0, e.frameW, e.frameH, e.anchor[0], e.anchor[1]); }
   }
   function repaintStrips() { for (const p of players) p.cells.forEach((c, i) => paint(p, c, i)); }
@@ -127,17 +132,17 @@ canvas { image-rendering: pixelated; display: block; background: var(--night); }
     const dt = (t - last) * speed; last = t;
     for (const p of players) {
       const n = p.ms.length, loop = p.kind === "char" ? p.a.loop : p.e.loop, hold = p.kind === "char" && p.a.holdLast;
-      if (p.wait > 0) { p.wait -= dt; if (p.wait <= 0) { p.i = 0; p.t = 0; } }
+      if (p.wait > 0) { p.wait -= dt; if (p.wait <= 0) { p.i = 0; p.t = 0; p.stepAcc = 0; } }
       else {
         p.t += dt;
         while (p.t >= p.ms[p.i]) {
           p.t -= p.ms[p.i];
-          if (p.i < n - 1) p.i++;
+          if (p.i < n - 1) { p.i++; if (p.kind === "char") p.stepAcc += mot(p.name, "step", p.i); }
           else if (loop) p.i = 0;
           else { p.wait = hold ? 1400 : 600; p.t = 0; break; }     // 한 번 재생: 잠깐 멈췄다가 다시 보여 줌
         }
       }
-      paint(p, p.play, p.i);
+      paint(p, p.play, p.i, true);
     }
     requestAnimationFrame(tick);
   }

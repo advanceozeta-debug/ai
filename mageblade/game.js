@@ -61,7 +61,8 @@
   $("dbg").addEventListener("click", toggleDebug);
 
   // ---------- 애니메이션 재생기 ----------
-  function animator(name) { return { name, i: 0, t: 0, done: false }; }
+  function animator(name) { return { name, i: 0, t: 0, done: false, entered: -1 }; }
+  const motionAt = (name, key, i) => ((C.motion[name] || {})[key] || [])[i] || 0;
   function stepAnim(a, dt) {
     const A = ANIM[a.name];
     a.t += dt;
@@ -126,7 +127,7 @@
   function update(dt) {
     const sec = dt / 1000;
     if (game.choosing) return;
-    P.invuln = Math.max(0, P.invuln - dt);
+    P.invuln = Math.max(0, P.invuln - dt); P.flash = Math.max(0, (P.flash || 0) - dt);
     P.skillCd = Math.max(0, P.skillCd - dt);
 
     // 1) 입력 → 상태 (쓰러짐·피격이 우선, 공격·스킬 중엔 이동 애니메이션이 덮어쓰지 않음)
@@ -152,6 +153,11 @@
     P.x += P.vx * sec; P.vx *= Math.pow(0.002, sec);
     P.x = Math.max(16, Math.min(W - 16, P.x));
     stepAnim(P.anim, dt);
+    if (P.anim.entered !== P.anim.i) {           // 새 프레임에 들어설 때 실제 이동(내딛기 등)
+      P.anim.entered = P.anim.i;
+      P.x += motionAt(P.state, "step", P.anim.i) * P.face;
+      P.x = Math.max(16, Math.min(W - 16, P.x));
+    }
 
     // 2) 공격 판정 (설정한 프레임에서만)
     if (P.state === "attack" && C.attack.activeFrames.includes(P.anim.i) && !P.anim.done) {
@@ -201,7 +207,7 @@
       if (en.kb) { en.x += en.kb * sec; en.kb *= Math.pow(0.001, sec); if (Math.abs(en.kb) < 4) en.kb = 0; }
       else if (!game.over) { const d = Math.sign(P.x - en.x); en.face = d || en.face; en.x += d * en.speed * sec; }
       if (!game.over && P.invuln <= 0 && P.state !== "down" && overlap(box(P, C.player.hurtbox), box(en, C.enemy.hurtbox))) {
-        P.hp -= C.enemy.contactDamage; P.invuln = C.player.invulnMs; P.vx = Math.sign(P.x - en.x || 1) * C.player.knockback;
+        P.hp -= C.enemy.contactDamage; P.invuln = C.player.invulnMs; P.flash = C.hitFlashMs; P.vx = Math.sign(P.x - en.x || 1) * C.player.knockback;
         game.shake = 120;
         if (P.hp <= 0) { P.hp = 0; setState("down", true); game.over = true; $("over").hidden = false; }
         else setState("hit", true);                // 피격은 공격·스킬을 끊는다
@@ -259,12 +265,22 @@
     ctx.fillStyle = "#3d4462"; ctx.fillRect(0, GROUND, W, 1);
     ctx.fillStyle = "#353b57"; for (let x = 4; x < W; x += 24) ctx.fillRect(x, GROUND + 6, 10, 1);
   }
-  function drawSprite(ent, anim) {                // 기준점(32,92)을 엔티티 위치에 맞춤, 왼쪽은 좌우 반전
+  const flashCv = document.createElement("canvas"); flashCv.width = CW; flashCv.height = CH;
+  const fctx = flashCv.getContext("2d");
+  function drawSprite(ent, anim, flash) {         // 기준점(32,92)을 엔티티 위치에 맞춤, 왼쪽은 좌우 반전
     const f = ANIM[anim.name].frames[anim.i];
-    const x = Math.round(ent.x), y = Math.round(ent.y);
+    const x = Math.round(ent.x), y = Math.round(ent.y + motionAt(anim.name, "dy", anim.i));
+    const mx = motionAt(anim.name, "dx", anim.i);           // 몸 움직임 (바라보는 방향 기준)
     ctx.save();
     if (ent.face < 0) { ctx.translate(x, 0); ctx.scale(-1, 1); ctx.translate(-x, 0); }
-    ctx.drawImage(sheetImg, f.x, f.y, f.w, f.h, x - AX, y - AY, CW, CH);
+    let src = sheetImg, sx = f.x, sy = f.y;
+    if (flash) {                                  // 하얀 실루엣으로 번쩍
+      fctx.clearRect(0, 0, CW, CH); fctx.globalCompositeOperation = "source-over";
+      fctx.drawImage(sheetImg, f.x, f.y, CW, CH, 0, 0, CW, CH);
+      fctx.globalCompositeOperation = "source-atop"; fctx.fillStyle = "#f0e9f7"; fctx.fillRect(0, 0, CW, CH);
+      src = flashCv; sx = 0; sy = 0;
+    }
+    ctx.drawImage(src, sx, sy, CW, CH, x - AX + mx, y - AY, CW, CH);
     ctx.restore();
   }
   function drawFx(e) {
@@ -299,7 +315,7 @@
     // 레이어: 바닥 이펙트(장판) → 적 → 캐릭터 → 공중 이펙트(투사체·폭발) → 숫자
     for (const e of game.effects) if (e.kind === "field") drawFx(e);
     for (const en of game.enemies) drawEnemy(en);
-    if (!(P.invuln > 0 && P.state !== "down" && Math.floor(P.invuln / 70) % 2)) drawSprite(P, P.anim);
+    drawSprite(P, P.anim, P.flash > 0);
     for (const e of game.effects) if (e.kind !== "field") drawFx(e);
     ctx.font = "8px monospace"; ctx.textAlign = "center";
     for (const m of game.marks) { ctx.fillStyle = "#06060f"; ctx.fillText(m.txt, m.x + 1, m.y + 1); ctx.fillStyle = "#e4b385"; ctx.fillText(m.txt, m.x, m.y); }

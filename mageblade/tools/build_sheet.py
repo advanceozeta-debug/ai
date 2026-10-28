@@ -30,6 +30,8 @@ ANIMS = [  # 이름, 프레임 수, 프레임당 ms, 반복, 마지막 프레임
     ("hit", 2, 100, False, False),
     ("down", 3, 170, False, True),
 ]
+REGISTER = {"idle": "upper", "run": "head", "hit": "upper"}   # 프레임끼리 맞출 기준 (상체 / 머리)
+BREATH = [0, 0, 1, 1, 0]                                       # 대기 프레임별 어깨 내림(px)
 SOURCE_NOTE = {
     "run": "시트 달리기 1~8번. 1~7번은 시트에 검이 없어 8번의 검을 앞손 위치에 합성",
     "attack": "시트 공격 1~4번. 4번은 시트에 검이 없어 달리기 8번의 검을 합성",
@@ -125,6 +127,37 @@ for row, (name, n, ms, loop, hold) in enumerate(ANIMS):
         foot_small = np.where(op.any(1))[0].max()
         ox = int(round(AX - f["ax"]))            # 몸통 중심을 x=32에
         oy = (AY - 1) - foot_small               # 발바닥 픽셀을 y=91에
+        # 같은 동작 안에서 프레임끼리 머리·상체 위치 맞추기 (프레임마다 1~2px 어긋나면 잔상처럼 떨려 보임)
+        if name in REGISTER:
+            ys_, xs_ = np.where(op)
+            top, bot = ys_.min(), ys_.max()
+            band = (top, top + 16) if REGISTER[name] == "head" else (top, top + int((bot - top) * 0.45))
+            m = np.zeros((CELL_H + 40, CELL_W + 40), bool)
+            sel = op[band[0]:band[1]]
+            if k == 0:
+                ref = (sel, ox, oy + band[0])
+            else:
+                best, bdx = -1, 0
+                for dx in range(-4, 5):
+                    a_ = np.zeros_like(m); b_ = np.zeros_like(m)
+                    rs, rx, ry = ref
+                    a_[ry + 20:ry + 20 + rs.shape[0], rx + 20:rx + 20 + rs.shape[1]] = rs
+                    yy0 = oy + band[0] + 20; xx0 = ox + dx + 20
+                    b_[yy0:yy0 + sel.shape[0], xx0:xx0 + sel.shape[1]] = sel
+                    score = (a_ & b_).sum() / max(1, (a_ | b_).sum())
+                    if score > best + 1e-9 or (abs(score - best) < 1e-9 and abs(dx) < abs(bdx)):
+                        best, bdx = score, dx
+                ox += bdx
+                anim.setdefault("registerShiftX", [0] * n)[k] = int(bdx)
+        # 대기: 숨쉬기 — 허리 위(어깨·머리)를 1px 내렸다 올림 (발은 그대로)
+        if name == "idle" and BREATH[k]:
+            ys_ = np.where(op.any(1))[0]
+            waist = ys_.max() - int((ys_.max() - ys_.min()) * 0.42)
+            up = sm[:waist].copy(); upm = op[:waist]
+            sm2 = sm.copy(); sm2[:waist][upm] = 0
+            tgt = sm2[BREATH[k]:waist + BREATH[k]]
+            tgt[upm] = up[upm]
+            sm = sm2; op = sm[..., 3] > 0
         x0, y0, x1, y1 = ox, oy, ox + w, oy + h
         ys, xs = np.where(op)
         L, T, R, B = ox + xs.min(), oy + ys.min(), ox + xs.max(), oy + ys.max()

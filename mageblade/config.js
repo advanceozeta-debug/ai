@@ -9,13 +9,26 @@ window.MAGEBLADE_CONFIG = {
 
   // 동작별 재생 속도 (프레임당 ms). 비워 두면 mageblade_sheet.json 값을 그대로 씀
   animations: {
-    idle:   { frameMs: 150 },
-    run:    { frameMs: 75 },
-    attack: { frameMs: [70, 80, 90, 120] },   // 들기 → 올리기 → 내려베기 → 되돌리기
-    skill:  { frameMs: [110, 140, 160] },
-    hit:    { frameMs: [90, 130] },
-    down:   { frameMs: [150, 170, 220] },
+    idle:   { frameMs: 200 },
+    run:    { frameMs: 80 },
+    attack: { frameMs: [90, 150, 110, 170] },  // 자세 잡기 → 치켜들기(멈칫) → 내려베기 → 마무리
+    skill:  { frameMs: [120, 180, 220] },
+    hit:    { frameMs: [110, 180] },
+    down:   { frameMs: [160, 210, 280] },
   },
+
+  // 그림 위에 더하는 실제 몸 움직임(px). x 는 바라보는 방향 기준 (+ = 앞)
+  //  dx/dy : 프레임마다 몸을 그리는 위치를 옮김 (발 기준점은 그대로, 판정에는 영향 없음)
+  //  step  : 그 프레임에 들어설 때 캐릭터가 실제로 이동하는 거리 (판정도 같이 이동)
+  motion: {
+    idle:   { dy: [0, 0, 0, 0, 0] },
+    run:    { dy: [0, -1, -2, -1, 0, -1, -2, -1] },      // 한 걸음마다 몸이 오르내림
+    attack: { dx: [0, -2, 3, 1], dy: [0, -1, 0, 0], step: [0, 0, 7, 2] },  // 뒤로 젖혔다가 앞으로 내딛으며 베기
+    skill:  { dx: [0, -2, -1], step: [0, 0, 0] },        // 쏘는 순간 반동
+    hit:    { dx: [-3, -1], dy: [-1, 0] },               // 맞고 뒤로 젖혀짐
+    down:   { dx: [-1, -3, -4], step: [0, -2, -2] },
+  },
+  hitFlashMs: 90,             // 맞는 순간 하얗게 번쩍 (깜빡이는 잔상 효과는 쓰지 않음)
 
   // 상태 우선순위: 높은 상태가 낮은 상태를 끊는다 (같은 순위는 못 끊음)
   priority: { idle: 0, run: 0, attack: 2, skill: 2, hit: 3, down: 4 },

@@ -63,9 +63,9 @@
   {
    "frame": "idle_2",
    "bbox": [
-    13,
+    14,
     31,
-    45,
+    46,
     91
    ],
    "feet_row": 91,
@@ -77,27 +77,27 @@
   {
    "frame": "idle_3",
    "bbox": [
-    15,
-    31,
-    47,
+    14,
+    32,
+    46,
     91
    ],
    "feet_row": 91,
-   "opaque_px": 1239,
+   "opaque_px": 1220,
    "semi_transparent_px": 0,
-   "bg_colored_px": 62,
+   "bg_colored_px": 59,
    "enclosed_holes": []
   },
   {
    "frame": "idle_4",
    "bbox": [
-    14,
-    31,
-    45,
+    15,
+    32,
+    46,
     91
    ],
    "feet_row": 91,
-   "opaque_px": 1193,
+   "opaque_px": 1175,
    "semi_transparent_px": 0,
    "bg_colored_px": 52,
    "enclosed_holes": []
@@ -147,9 +147,9 @@
   {
    "frame": "run_3",
    "bbox": [
-    14,
+    13,
     36,
-    55,
+    54,
     91
    ],
    "feet_row": 91,
@@ -161,9 +161,9 @@
   {
    "frame": "run_4",
    "bbox": [
-    13,
+    15,
     36,
-    53,
+    55,
     91
    ],
    "feet_row": 91,
@@ -175,9 +175,9 @@
   {
    "frame": "run_5",
    "bbox": [
-    13,
+    14,
     37,
-    54,
+    55,
     91
    ],
    "feet_row": 91,
@@ -189,9 +189,9 @@
   {
    "frame": "run_6",
    "bbox": [
-    13,
+    15,
     35,
-    55,
+    57,
     91
    ],
    "feet_row": 91,
@@ -217,9 +217,9 @@
   {
    "frame": "run_8",
    "bbox": [
-    11,
+    13,
     34,
-    52,
+    54,
     91
    ],
    "feet_row": 91,
@@ -343,9 +343,9 @@
   {
    "frame": "hit_2",
    "bbox": [
-    9,
+    6,
     30,
-    54,
+    51,
     91
    ],
    "feet_row": 91,
@@ -406,24 +406,24 @@
    815
   ],
   [
-   "idle_4",
+   "idle_3",
    "idle_5",
-   887
-  ],
-  [
-   "idle_2",
-   "idle_4",
-   893
-  ],
-  [
-   "idle_2",
-   "idle_5",
-   915
+   854
   ],
   [
    "idle_1",
+   "idle_2",
+   897
+  ],
+  [
+   "idle_3",
    "idle_4",
-   943
+   902
+  ],
+  [
+   "idle_1",
+   "idle_3",
+   949
   ]
  ],
  "effects": {

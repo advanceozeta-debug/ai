@@ -36,9 +36,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      13,
+      14,
       31,
-      45,
+      46,
       91
      ],
      "anchorShiftX": 0
@@ -49,9 +49,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      15,
-      31,
-      47,
+      14,
+      32,
+      46,
       91
      ],
      "anchorShiftX": 0
@@ -62,9 +62,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      14,
-      31,
-      45,
+      15,
+      32,
+      46,
       91
      ],
      "anchorShiftX": 0
@@ -92,7 +92,14 @@
    ],
    "loop": true,
    "holdLast": false,
-   "filledHolesPx": 5
+   "filledHolesPx": 5,
+   "registerShiftX": [
+    0,
+    1,
+    -1,
+    1,
+    0
+   ]
   },
   "run": {
    "row": 1,
@@ -129,9 +136,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      14,
+      13,
       36,
-      55,
+      54,
       91
      ],
      "anchorShiftX": 0
@@ -142,9 +149,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      13,
+      15,
       36,
-      53,
+      55,
       91
      ],
      "anchorShiftX": 0
@@ -155,9 +162,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      13,
+      14,
       37,
-      54,
+      55,
       91
      ],
      "anchorShiftX": 0
@@ -168,9 +175,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      13,
+      15,
       35,
-      55,
+      57,
       91
      ],
      "anchorShiftX": 0
@@ -194,9 +201,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      11,
+      13,
       34,
-      52,
+      54,
       91
      ],
      "anchorShiftX": 0
@@ -215,7 +222,17 @@
    "loop": true,
    "holdLast": false,
    "note": "시트 달리기 1~8번. 1~7번은 시트에 검이 없어 8번의 검을 앞손 위치에 합성",
-   "filledHolesPx": 12
+   "filledHolesPx": 12,
+   "registerShiftX": [
+    0,
+    0,
+    -1,
+    2,
+    1,
+    2,
+    0,
+    2
+   ]
   },
   "attack": {
    "row": 2,
@@ -358,9 +375,9 @@
      "w": 64,
      "h": 96,
      "bbox": [
-      9,
+      6,
       30,
-      54,
+      51,
       91
      ],
      "anchorShiftX": 0
@@ -372,6 +389,10 @@
    ],
    "loop": false,
    "holdLast": false,
+   "registerShiftX": [
+    0,
+    -3
+   ],
    "filledHolesPx": 1
   },
   "down": {
