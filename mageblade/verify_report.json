@@ -1,0 +1,473 @@
+{
+ "sheet": {
+  "file": "mageblade_sheet.png",
+  "size": [
+   512,
+   576
+  ],
+  "mode": "RGBA"
+ },
+ "rows": {
+  "idle": {
+   "row": 1,
+   "frames": 5,
+   "expected": 5,
+   "unused_cells_transparent": true
+  },
+  "run": {
+   "row": 2,
+   "frames": 8,
+   "expected": 8,
+   "unused_cells_transparent": true
+  },
+  "attack": {
+   "row": 3,
+   "frames": 4,
+   "expected": 4,
+   "unused_cells_transparent": true
+  },
+  "skill": {
+   "row": 4,
+   "frames": 3,
+   "expected": 3,
+   "unused_cells_transparent": true
+  },
+  "hit": {
+   "row": 5,
+   "frames": 2,
+   "expected": 2,
+   "unused_cells_transparent": true
+  },
+  "down": {
+   "row": 6,
+   "frames": 3,
+   "expected": 3,
+   "unused_cells_transparent": true
+  }
+ },
+ "frames": [
+  {
+   "frame": "idle_1",
+   "bbox": [
+    14,
+    31,
+    46,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1243,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 66,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "idle_2",
+   "bbox": [
+    13,
+    31,
+    45,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1251,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 73,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "idle_3",
+   "bbox": [
+    15,
+    31,
+    47,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1239,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 62,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "idle_4",
+   "bbox": [
+    14,
+    31,
+    45,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1193,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 52,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "idle_5",
+   "bbox": [
+    14,
+    31,
+    46,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1229,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 53,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_1",
+   "bbox": [
+    13,
+    36,
+    53,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1213,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 91,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_2",
+   "bbox": [
+    15,
+    37,
+    54,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1172,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 84,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_3",
+   "bbox": [
+    14,
+    36,
+    55,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1179,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 50,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_4",
+   "bbox": [
+    13,
+    36,
+    53,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1143,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 48,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_5",
+   "bbox": [
+    13,
+    37,
+    54,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1153,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 60,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_6",
+   "bbox": [
+    13,
+    35,
+    55,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1243,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 86,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_7",
+   "bbox": [
+    15,
+    36,
+    56,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1166,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 63,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "run_8",
+   "bbox": [
+    11,
+    34,
+    52,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1228,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 48,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "attack_1",
+   "bbox": [
+    6,
+    27,
+    63,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1806,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 107,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "attack_2",
+   "bbox": [
+    9,
+    18,
+    54,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1863,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 96,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "attack_3",
+   "bbox": [
+    5,
+    28,
+    63,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1796,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 96,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "attack_4",
+   "bbox": [
+    4,
+    26,
+    55,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1888,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 87,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "skill_1",
+   "bbox": [
+    1,
+    25,
+    57,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1846,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 76,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "skill_2",
+   "bbox": [
+    3,
+    24,
+    57,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1818,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 90,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "skill_3",
+   "bbox": [
+    0,
+    24,
+    50,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1820,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 82,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "hit_1",
+   "bbox": [
+    6,
+    29,
+    54,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1796,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 90,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "hit_2",
+   "bbox": [
+    9,
+    30,
+    54,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1674,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 67,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "down_1",
+   "bbox": [
+    1,
+    43,
+    55,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1579,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 103,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "down_2",
+   "bbox": [
+    0,
+    54,
+    61,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1432,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 77,
+   "enclosed_holes": []
+  },
+  {
+   "frame": "down_3",
+   "bbox": [
+    0,
+    62,
+    63,
+    91
+   ],
+   "feet_row": 91,
+   "opaque_px": 1205,
+   "semi_transparent_px": 0,
+   "bg_colored_px": 54,
+   "enclosed_holes": []
+  }
+ ],
+ "issues": [],
+ "identical_frames": [],
+ "least_different_pairs": [
+  [
+   "idle_1",
+   "idle_5",
+   815
+  ],
+  [
+   "idle_4",
+   "idle_5",
+   887
+  ],
+  [
+   "idle_2",
+   "idle_4",
+   893
+  ],
+  [
+   "idle_2",
+   "idle_5",
+   915
+  ],
+  [
+   "idle_1",
+   "idle_4",
+   943
+  ]
+ ],
+ "effects": {
+  "projectile": {
+   "size": [
+    156,
+    26
+   ],
+   "mode": "RGBA",
+   "frames": 2,
+   "frame": [
+    78,
+    26
+   ],
+   "edge_touch": true,
+   "semi_transparent_px": 0
+  },
+  "field": {
+   "size": [
+    410,
+    62
+   ],
+   "mode": "RGBA",
+   "frames": 5,
+   "frame": [
+    82,
+    62
+   ],
+   "edge_touch": true,
+   "semi_transparent_px": 0
+  },
+  "explosion": {
+   "size": [
+    380,
+    60
+   ],
+   "mode": "RGBA",
+   "frames": 5,
+   "frame": [
+    76,
+    60
+   ],
+   "edge_touch": true,
+   "semi_transparent_px": 0
+  }
+ }
+}

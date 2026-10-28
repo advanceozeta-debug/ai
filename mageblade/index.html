@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<title>은월의 마검사</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Gowun+Batang:wght@700&family=IBM+Plex+Sans+KR:wght@400;600&family=DotGothic16&display=swap">
+<style>
+/* 한 화면 게임: 위 상태줄, 가운데 정수 배율 무대, 아래 터치 버튼. 밤의 남색 한 가지 테마 */
+:root {
+  --night: #0d1a29; --deep: #08111c; --panel: #14233a; --line: #2b3d5c;
+  --silver: #f0e9f7; --lilac: #a8a1d2; --violet: #b98cfa; --gold: #e4b385; --blood: #8f3a4f;
+  --display: "Gowun Batang", serif; --body: "IBM Plex Sans KR", system-ui, sans-serif; --pixel: "DotGothic16", monospace;
+  color-scheme: dark;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+html, body { height: 100%; margin: 0; }
+body { background: var(--deep); color: var(--silver); font-family: var(--body); overflow: hidden; touch-action: none; -webkit-user-select: none; user-select: none; }
+.app { height: 100%; height: 100dvh; display: grid; grid-template-rows: auto 1fr auto;
+  padding: env(safe-area-inset-top, 0px) max(12px, env(safe-area-inset-right, 0px)) env(safe-area-inset-bottom, 0px) max(12px, env(safe-area-inset-left, 0px)); }
+header { display: flex; align-items: center; gap: 8px 16px; flex-wrap: wrap; padding-block: 10px; }
+h1 { font-family: var(--display); font-size: 22px; margin: 0; letter-spacing: .04em; }
+.grade { font-family: var(--pixel); font-size: 13px; color: var(--violet); }
+.bars { display: flex; gap: 14px; align-items: center; margin-left: auto; font-family: var(--pixel); font-size: 13px; color: var(--lilac); flex-wrap: wrap; }
+.bar { width: 120px; height: 8px; background: var(--deep); border: 1px solid var(--line); }
+.bar i { display: block; height: 100%; width: 100%; }
+#hp { background: var(--blood); } #cd { background: var(--violet); }
+.tools { display: flex; gap: 8px; align-items: center; }
+.tools a, .tools button { font: 600 12px var(--body); color: var(--lilac); background: transparent; border: 1px solid var(--line); padding: 4px 8px; text-decoration: none; cursor: pointer; }
+.tools button.on { color: var(--deep); background: var(--gold); border-color: var(--gold); }
+#stage { position: relative; display: grid; place-items: center; min-height: 0; }
+#game { image-rendering: pixelated; image-rendering: crisp-edges; display: block; background: var(--night); }
+.overlay { position: absolute; inset: 0; display: grid; place-items: center; align-content: center; gap: 14px; background: rgba(8,17,28,.78); text-align: center; padding: 16px; }
+.overlay h2 { font-family: var(--display); margin: 0; font-size: 24px; }
+#cards { display: flex; gap: 12px; flex-wrap: wrap; justify-content: center; }
+.card { width: 170px; padding: 14px; background: var(--panel); border: 1px solid var(--line); color: var(--silver); font: inherit; text-align: left; display: grid; gap: 6px; cursor: pointer; }
+.card b { font-family: var(--display); font-size: 16px; color: var(--gold); }
+.card span { font-size: 13px; color: var(--lilac); }
+.card:hover, .card:focus-visible { border-color: var(--violet); outline: none; }
+#again { font: 600 16px var(--body); padding: 10px 22px; background: var(--violet); color: var(--deep); border: 0; cursor: pointer; }
+.pad { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding-block: 8px 12px; }
+.pad .grp { display: flex; gap: 10px; }
+.pad button { width: 72px; height: 60px; font: 600 15px var(--body); color: var(--silver); background: var(--panel); border: 1px solid var(--line); touch-action: none; }
+.pad button.on { background: var(--violet); color: var(--deep); }
+.pad .big { width: 86px; }
+.hint { font-size: 12px; color: var(--lilac); text-align: center; opacity: .8; }
+#stateTag, #scaleTag { font-family: var(--pixel); }
+@media (hover: hover) and (pointer: fine) { .pad .grp button { width: 64px; height: 44px; } }
+@media (max-width: 560px) { .bar { width: 80px; } .hint { display: none; } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <h1>은월의 마검사</h1>
+    <span class="grade">★6 · 근접 공격형</span>
+    <span class="bars">
+      <span>HP</span><span class="bar"><i id="hp"></i></span><span id="hpText">100 / 100</span>
+      <span>스킬</span><span class="bar"><i id="cd"></i></span>
+      <span>방 <b id="room">1</b></span>
+    </span>
+    <span class="tools">
+      <span id="stateTag">idle</span><span id="scaleTag">×1</span>
+      <button id="dbg" type="button" title="H 키">판정 보기</button>
+      <a href="viewer.html">동작 미리보기</a>
+    </span>
+  </header>
+  <div id="stage">
+    <canvas id="game" width="320" height="180" aria-label="게임 화면"></canvas>
+    <div class="overlay" id="loading">불러오는 중</div>
+    <div class="overlay" id="pick" hidden><h2 id="pickTitle">강화를 고르세요</h2><div id="cards"></div></div>
+    <div class="overlay" id="over" hidden><h2>쓰러졌습니다</h2><button id="again" type="button">다시 시작 (R)</button></div>
+  </div>
+  <div>
+    <div class="pad">
+      <div class="grp"><button data-key="left" aria-label="왼쪽">◀</button><button data-key="right" aria-label="오른쪽">▶</button></div>
+      <div class="hint">이동 ←→ / A D · 공격 J / Z · 스킬 K / X · 판정 H</div>
+      <div class="grp"><button data-key="skill">스킬</button><button data-key="attack" class="big">공격</button></div>
+    </div>
+  </div>
+</div>
+<script src="config.js"></script>
+<script src="game.js"></script>
+</body>
+</html>
